@@ -1,0 +1,28 @@
+# segredos e estado local
+.env
+config.env
+.session_cache.json
+
+# python
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# build
+dist/
+build/
+*.spec
+*.AppImage
+
+# editores / SO
+.idea/
+.vscode/
+.DS_Store
+
+# mídia gerada
+recordings/
+*.log
