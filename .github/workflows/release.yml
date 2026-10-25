@@ -24,7 +24,7 @@ jobs:
       - name: Lint
         run: .venv/bin/ruff check .
       - name: Test
-        run: xvfb-run -a .venv/bin/pytest -q
+        run: xvfb-run -a .venv/bin/python -m pytest -q
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
