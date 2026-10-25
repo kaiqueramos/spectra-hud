@@ -50,5 +50,5 @@ EOF
 
 echo
 echo "Done. Next:"
-echo "  1) edit $ROOT/.env and set SPECTRA_API_KEY"
-echo "  2) run: $ROOT/run.sh"
+echo "  1) run: $ROOT/run.sh"
+echo "  2) the first run opens the command center: choose provider, paste key, test vision, consent and save"

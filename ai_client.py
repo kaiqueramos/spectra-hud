@@ -4,18 +4,21 @@ Carrega dinamicamente o prompt universal de prompt_system.md e injeta a memória
 Saída direta, limpa e mastigada para leitura instantânea em tela.
 """
 
-import os
-import json
-import uuid
 import base64
-import re
-import time
-import urllib.request
-import urllib.error
-from pathlib import Path
-from PIL import Image
 import io
+import json
+import os
+import re
+import threading
+import time
+import urllib.error
+import urllib.request
+import uuid
+from pathlib import Path
 
+from PIL import Image
+
+import config
 import demo
 from session_memory import session
 
@@ -53,6 +56,104 @@ PROMPT_FILE = Path(__file__).resolve().parent / "prompt_system.md"
 
 ERROR_CONTEXT = "Erro"
 LAST_ERROR = ""  # Último erro de análise/consulta, para o HUD exibir.
+LAST_ERROR_KIND = ""
+LAST_META: dict = {}
+CANCEL_EVENT = threading.Event()
+
+
+def reload_config(cfg: dict | None = None) -> None:
+    """Recarrega base/modelo/chave do config.json (ou env, que tem prioridade)."""
+    global API_KEY, BASE_URL, MODEL_NAME
+    rt = config.runtime(cfg)
+    API_KEY = rt["api_key"]
+    BASE_URL = rt["base_url"]
+    MODEL_NAME = rt["model"]
+
+
+def reset_cancel() -> None:
+    CANCEL_EVENT.clear()
+
+
+def cancel_scan() -> None:
+    CANCEL_EVENT.set()
+
+
+def was_cancelled() -> bool:
+    return CANCEL_EVENT.is_set()
+
+
+def classify_error(exc: Exception) -> tuple[str, str]:
+    if isinstance(exc, urllib.error.HTTPError):
+        code = exc.code
+        if code in (401, 403):
+            return "auth", "Chave inválida ou expirada. Abra o centro de comando (Ctrl+Alt+C)."
+        if code == 429:
+            return "quota", "Cota esgotada. Troque de provedor/modelo no centro de comando."
+        if code == 404:
+            return "model", "Modelo ou endpoint não encontrado. Confira base URL e modelo."
+        if code == 400:
+            return "request", "O provedor recusou o request: modelo sem visão ou parâmetro inválido."
+        if 500 <= code < 600:
+            return "server", f"Provedor instável (HTTP {code}). Tente de novo."
+        return "http", f"HTTP {code}."
+    if isinstance(exc, urllib.error.URLError):
+        return "network", "Sem conexão com o provedor. Confira a rede e a base URL."
+    if isinstance(exc, TimeoutError):
+        return "timeout", "Tempo esgotado. Tente de novo ou use um modelo mais rápido."
+    return "unknown", str(exc)[:140]
+
+
+def _headers(key: str) -> dict:
+    return {
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+        "User-Agent": "spectra-hud/0.1.0",
+        "x-opencode-session": str(uuid.uuid4()),
+    }
+
+
+def test_vision(base_url: str, model: str, api_key: str) -> tuple[bool, str, float]:
+    """Envia uma imagem vermelha/azul e confirma se o modelo realmente vê."""
+    img = Image.new("RGB", (128, 128), (220, 30, 30))
+    for x in range(64, 128):
+        for y in range(128):
+            img.putpixel((x, y), (30, 60, 220))
+    b64 = encode_image_to_base64(img, max_dim=128)
+    payload = {
+        "model": model,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "Which two colors are in this image? Answer with two words."},
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}},
+                ],
+            }
+        ],
+        "max_tokens": 80,
+    }
+    req = urllib.request.Request(
+        f"{base_url.rstrip('/')}/chat/completions",
+        data=json.dumps(payload).encode(),
+        headers=_headers(api_key or "ollama"),
+    )
+    t0 = time.time()
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read().decode())
+        message = (data.get("choices") or [{}])[0].get("message") or {}
+        content = (message.get("content") or "").strip()
+        reasoning = (message.get("reasoning_content") or "").strip()
+        text = f"{content} {reasoning}".strip()
+        latency = time.time() - t0
+        low = text.lower()
+        if "red" in low and "blue" in low:
+            return True, "visão OK: confirmou vermelho e azul", latency
+        if text:
+            return False, f"respondeu, mas não confirmou as cores: {text[:60]}", latency
+        return False, "resposta vazia", latency
+    except Exception as exc:  # noqa: BLE001
+        return False, classify_error(exc)[1], time.time() - t0
 VALID_KINDS = ("alerta", "acao", "item", "info")
 MAX_INSIGHTS = 3  # Alt+1..3 só alcançam 3 cards.
 MAX_INSIGHT_CHARS = 420
@@ -155,8 +256,11 @@ def analyze_screenshot(image: Image.Image) -> tuple[str, list[dict]]:
     if DEMO:
         time.sleep(1.1)
         session.record_scan(demo.CONTEXT, demo.INSIGHTS)
+        LAST_META.update({"latency": 1.1, "usage": {}, "model": "demo", "cost": None})
         return demo.CONTEXT, demo.INSIGHTS
 
+    if was_cancelled():
+        return ERROR_CONTEXT, []
     session.touch()
     b64_img = encode_image_to_base64(image)
     system_prompt = get_system_prompt()
@@ -207,6 +311,7 @@ def analyze_screenshot(image: Image.Image) -> tuple[str, list[dict]]:
         headers=headers,
     )
 
+    t0 = time.time()
     try:
         with urllib.request.urlopen(req, timeout=40) as resp:
             raw_bytes = resp.read()
@@ -229,12 +334,26 @@ def analyze_screenshot(image: Image.Image) -> tuple[str, list[dict]]:
 
             detected_context = res.get("context", "Ambiente Identificado")
             insights = sanitize_insights(res.get("insights", []))
+            latency = time.time() - t0
+            usage = data.get("usage") or {}
+            LAST_META.update(
+                {
+                    "latency": latency,
+                    "usage": usage if isinstance(usage, dict) else {},
+                    "model": MODEL_NAME,
+                    "cost": config.cost_for(MODEL_NAME, usage if isinstance(usage, dict) else {}),
+                }
+            )
+
+            if was_cancelled():
+                return ERROR_CONTEXT, []
 
             session.record_scan(detected_context, insights)
             return detected_context, insights
     except Exception as e:
-        LAST_ERROR = str(e)
-        print(f"[Erro de Análise Visual] {e}")
+        global LAST_ERROR_KIND
+        LAST_ERROR_KIND, LAST_ERROR = classify_error(e)
+        print(f"[Erro de Análise Visual] {LAST_ERROR_KIND}: {e}")
         return ERROR_CONTEXT, []
 
 
@@ -247,6 +366,7 @@ def ask_followup(
     if DEMO:
         time.sleep(0.8)
         session.record_interaction(question, demo.ANSWER, target_label)
+        LAST_META.update({"latency": 0.8, "usage": {}, "model": "demo", "cost": None})
         return demo.ANSWER
 
     b64_img = encode_image_to_base64(image)
@@ -309,6 +429,7 @@ def ask_followup(
         headers=headers,
     )
 
+    t0 = time.time()
     try:
         with urllib.request.urlopen(req, timeout=35) as resp:
             raw_bytes = resp.read()
@@ -332,10 +453,21 @@ def ask_followup(
                 else:
                     content = raw_reasoning[:300]
 
+            usage = data.get("usage") or {}
+            LAST_META.update(
+                {
+                    "latency": time.time() - t0,
+                    "usage": usage if isinstance(usage, dict) else {},
+                    "model": MODEL_NAME,
+                    "cost": config.cost_for(MODEL_NAME, usage if isinstance(usage, dict) else {}),
+                }
+            )
+            if was_cancelled():
+                return "Cancelado."
             session.record_interaction(question, content, target_label)
             return content
     except Exception as e:
-        global LAST_ERROR
-        LAST_ERROR = str(e)
-        print(f"[Erro de Consulta] {e}")
-        return "Erro na consulta. Tente de novo."
+        global LAST_ERROR, LAST_ERROR_KIND
+        LAST_ERROR_KIND, LAST_ERROR = classify_error(e)
+        print(f"[Erro de Consulta] {LAST_ERROR_KIND}: {e}")
+        return LAST_ERROR

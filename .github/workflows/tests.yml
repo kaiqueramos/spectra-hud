@@ -21,5 +21,8 @@ jobs:
           . .venv/bin/activate
           pip install -r requirements-dev.txt
 
+      - name: Lint
+        run: .venv/bin/ruff check .
+
       - name: Test
         run: xvfb-run -a .venv/bin/pytest -q

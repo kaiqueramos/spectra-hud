@@ -11,6 +11,7 @@ import subprocess
 
 import mss
 from PIL import Image
+from Xlib import X
 from Xlib import display as xdisplay
 
 
@@ -45,6 +46,32 @@ def get_mouse_position() -> tuple[int, int] | None:
             d.close()
     except Exception:
         return None
+
+
+def get_active_window_title() -> str:
+    """Título da janela ativa (para o blocklist de telas sensíveis)."""
+    d = None
+    try:
+        d = xdisplay.Display()
+        root = d.screen().root
+        atom = d.intern_atom("_NET_ACTIVE_WINDOW")
+        prop = root.get_full_property(atom, X.AnyPropertyType)
+        if not prop or not prop.value:
+            return ""
+        win = d.create_resource_object("window", prop.value[0])
+        utf8 = d.intern_atom("UTF8_STRING")
+        name = win.get_full_property(d.intern_atom("_NET_WM_NAME"), utf8)
+        if name and name.value:
+            return name.value.decode("utf-8", "replace")
+        return win.get_wm_name() or ""
+    except Exception:
+        return ""
+    finally:
+        if d is not None:
+            try:
+                d.close()
+            except Exception:
+                pass
 
 
 def capture_active_monitor() -> tuple[Image.Image, dict]:

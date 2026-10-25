@@ -8,7 +8,7 @@
 
 **Status: v0.1 — experimental.** Linux + X11 only. Bring your own API key. The prompt is Brazilian Portuguese.
 
-[**Website**](https://kaiqueramos.github.io/spectra-hud/) · [**GitHub**](https://github.com/kaiqueramos/spectra-hud) · [**Privacy**](PRIVACY.md)
+[**Website**](https://kaiqueramos.github.io/spectra-hud/) · [**GitHub**](https://github.com/kaiqueramos/spectra-hud) · [**Privacy**](PRIVACY.md) · [**LGPD**](docs/LGPD.md)
 
 <p align="center">
   <a href="https://kaiqueramos.github.io/spectra-hud/">
@@ -29,27 +29,36 @@ Press `Ctrl+Alt+Space` → Spectra captures the active monitor, asks a vision mo
 1. A global hotkey captures the monitor under the mouse cursor (`mss`).
 2. The frame is downscaled to 1600 px and sent as JPEG to an OpenAI-compatible vision endpoint.
 3. The model returns up to three insights with an optional `box_2d` (normalized 0–1000).
-4. Cards and thin highlights are drawn with Tkinter/X11 next to each element.
+4. Cards and a thin target bar are drawn with Tkinter/X11 next to each element.
 5. A 1-hour sliding session memory feeds context into the next scan.
 
 No server, no telemetry. The screenshot goes only to the endpoint **you** configure.
 
 ## Features
 
+- **Command center** (`Ctrl+Alt+C`): provider presets, base URL, model, API key, consent, pause, blocklist, hotkeys and pricing.
+- **First-run wizard**: opens automatically when there is no key or consent.
+- **Vision test**: sends a red/blue image and confirms the model actually sees it.
+- **System keyring** for the API key (fallback to a 600 config file).
+- **Tray icon** (AppIndicator) with scan, pause and quit.
 - Global scan hotkey with toggle and a “scanning” indicator.
+- **Cancel** an in-flight scan from the indicator or the same hotkey.
 - Up to 3 anchored cards, draggable, click-to-ask.
 - Global command bar (`Ctrl+Shift+Space`) for free-form questions about the screen.
-- Session memory with sliding TTL (1 h).
-- Multi-monitor aware (X11).
+- **Private mode** (`Ctrl+Alt+P`) and a **window-title blocklist** for banking/password windows.
+- Session memory with sliding TTL (1 h), stored under XDG state.
+- Multi-monitor aware (X11), with a safe side-column fallback when the model’s box is bad.
 - Bring your own key: any OpenAI-compatible vision model.
-- 41 unit tests.
+- Local models via Ollama.
+- 53 unit tests.
 
 ## Requirements
 
-- Linux with **X11** (Wayland is not supported in v0.1).
+- Linux with **X11** (Wayland is not supported in v0.1; the app fails with a clear message).
 - Python **3.10+** with Tkinter (`sudo apt install python3-tk`).
-- `xdotool` (`sudo apt install xdotool`).
-- An API key for an OpenAI-compatible vision endpoint.
+- `xdotool` is optional (Xlib fallback is built in).
+- `keyring` and `pystray` are installed by `requirements.txt`; the tray needs the GNOME AppIndicator extension.
+- An API key for an OpenAI-compatible vision endpoint (or a local Ollama model).
 
 ## Quick start
 
@@ -57,13 +66,10 @@ No server, no telemetry. The screenshot goes only to the endpoint **you** config
 git clone https://github.com/kaiqueramos/spectra-hud.git
 cd spectra-hud
 ./install.sh
-```
-
-The installer creates `.venv`, installs dependencies, copies `.env.example` to `.env` and registers a desktop entry. Edit `.env` with your key, then run:
-
-```bash
 ./run.sh
 ```
+
+The first run opens the **command center**. Choose a provider, paste the key, click **Testar visão**, accept the consent and save. The key goes to the system keyring; settings go to `~/.config/spectra-hud/config.json`.
 
 Manual install:
 
@@ -71,63 +77,91 @@ Manual install:
 python3 -m venv .venv
 . .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
-# edit .env
 python3 main.py
 ```
 
+`.env` is still supported as an override/migration path, but it is no longer required.
+
+## Command center
+
+| Field | Meaning |
+|---|---|
+| Provider | OpenCode Go, OpenCode Zen (free), CommandCode, Ollama or Custom |
+| Base URL | OpenAI-compatible endpoint |
+| Model | Provider-specific vision model ID |
+| API key | Stored in the system keyring; never committed |
+| Consent | Explicit LGPD consent for sending screenshots |
+| Pause | Private mode: nothing is captured |
+| Blocklist | Window-title terms that block a scan |
+| Hotkeys | Scan, command bar, center, pause (restart to apply) |
+| Pricing | Optional `$ / 1M` input/output for cost display |
+
+The status panel shows the last scan latency, model and token usage; cost appears when pricing is set.
+
 ## Configuration
 
-`.env` in the project root (never commit it):
+Settings live in `~/.config/spectra-hud/config.json` (mode 600), and the key lives in the system keyring. Environment variables override both:
 
-| Variable | Required | Default | Meaning |
-|---|---|---|---|
-| `SPECTRA_API_KEY` | yes | — | Provider key |
-| `SPECTRA_BASE_URL` | no | `https://opencode.ai/zen/go/v1` | OpenAI-compatible base URL |
-| `SPECTRA_MODEL` | no | `deepseek-v4.1-flash` | Vision model (provider-specific ID) |
-| `SPECTRA_HOTKEY` | no | `<ctrl>+<alt>+<space>` | Scan hotkey (pynput syntax) |
-| `SPECTRA_HOTKEY_BAR` | no | `<ctrl>+<shift>+<space>` | Command bar hotkey |
+| Variable | Meaning |
+|---|---|
+| `SPECTRA_API_KEY` | Provider key |
+| `SPECTRA_BASE_URL` | OpenAI-compatible base URL |
+| `SPECTRA_MODEL` | Vision model |
+| `SPECTRA_HOTKEY` | Scan hotkey (pynput syntax) |
+| `SPECTRA_HOTKEY_BAR` | Command bar hotkey |
 
-Environment variables override `.env`. Legacy names (`OPENCODE_GO_API_KEY`, `OPENCODE_GO_BASE_URL`, `MODEL_NAME`) still work.
+Legacy names (`OPENCODE_GO_API_KEY`, `OPENCODE_GO_BASE_URL`, `MODEL_NAME`) and `.env` are read once for migration.
 
-**Hotkey note:** the default is `Ctrl+Alt+Space` because `Ctrl+Space` is the autocomplete shortcut in VS Code and JetBrains IDEs. You can change it with `SPECTRA_HOTKEY`.
+See [docs/PROVIDERS.md](docs/PROVIDERS.md) for presets and the vision test.
 
 ## Hotkeys
 
 | Key | Action |
 |---|---|
-| `Ctrl+Alt+Space` | Scan screen / close HUD |
+| `Ctrl+Alt+Space` | Scan screen / close HUD / cancel an in-flight scan |
 | `Ctrl+Shift+Space` | Global command bar |
+| `Ctrl+Alt+C` | Command center |
+| `Ctrl+Alt+P` | Pause / resume |
 | `Alt+1..3` | Open the question box for card 1..3 |
 | `Esc` | Close the active prompt |
 | Click card | Ask a follow-up about that item |
 | Drag card | Reposition it |
 
+**Hotkey note:** the default is `Ctrl+Alt+Space` because `Ctrl+Space` is the autocomplete shortcut in VS Code and JetBrains IDEs.
+
 ## Privacy and cost
 
-Every scan sends a JPEG of the **active monitor** to the endpoint you configure. That may include passwords, private messages or financial data on screen. Read [PRIVACY.md](PRIVACY.md) before using it on sensitive screens.
+Every scan sends a JPEG of the **active monitor** to the endpoint you configure. That may include passwords, private messages or financial data on screen. Read [PRIVACY.md](PRIVACY.md) and [docs/LGPD.md](docs/LGPD.md) before using it on sensitive screens.
 
 - No analytics, no telemetry, no Spectra server.
-- The local session cache (`.session_cache.json`) stores text only, for up to 1 hour.
-- Each scan is one vision request billed by your provider. Cost depends on the model and image size.
+- Explicit consent is required before the first scan.
+- The window-title blocklist and private mode are local controls, not a guarantee.
+- The session cache lives in `~/.local/state/spectra-hud/session.json` (text only, 1 h).
+- Logs live in `~/.local/state/spectra-hud/spectra.log` (no screenshots, no keys).
+- Each scan is one vision request billed by your provider.
 
 ## Known limitations
 
-- **X11 only.** Wayland screen capture and global shortcuts need a different implementation.
+- **X11 only.** Wayland capture and global shortcuts need a different implementation.
 - **HiDPI scaling** may offset cards from their targets.
+- **No pixel redaction** yet: pause/blocklist are the current controls. Use a local model for sensitive work.
 - **Prompt injection:** text visible on screen is untrusted input to the model.
-- No single-instance lock: running twice registers duplicate hotkeys.
-- The overlay creates several topmost windows; some window managers may flicker or steal focus.
+- Some window managers may flicker or steal focus from the overlay.
+- No packaging/AppImage yet.
 
 ## Roadmap
 
+- [x] Tray icon, pause/private mode, configurable hotkey UI
+- [x] Command center + first-run wizard
+- [x] Keyring, consent, blocklist, vision test
+- [x] Cancel, latency and token/cost readout
+- [x] Local models via Ollama
+- [ ] Automatic fallback (free → paid)
 - [ ] Wayland support (XDG Desktop Portal + `grim`)
-- [ ] Tray icon, pause/private mode, configurable hotkey UI
-- [ ] Local models via Ollama
+- [ ] Pixel redaction and region selection
 - [ ] AppImage packaging
 - [ ] English prompt / i18n
-- [ ] Cost guard and request debounce
-- [ ] Integration tests for the overlay
+- [ ] Integration tests for GNOME/KDE/i3, HiDPI
 
 ## Demo mode
 
@@ -158,6 +192,7 @@ python3 -m venv .venv
 . .venv/bin/activate
 pip install -r requirements-dev.txt
 pytest -q
+ruff check .
 ```
 
 ## License

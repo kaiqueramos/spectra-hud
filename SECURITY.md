@@ -18,7 +18,8 @@ Include: affected version, steps to reproduce, impact, and a suggested fix if yo
 
 Spectra is a local desktop app that sends screenshots to a third-party model endpoint.
 
-- **API key:** stored in `.env` in plaintext in v0.1. It is read at startup and sent only to `SPECTRA_BASE_URL`. Never commit `.env`; if a key leaks, revoke it at the provider immediately.
+- **API key:** stored in the system keyring (service `spectra-hud`); a 600 fallback file is used only when the keyring is unavailable. It is sent only to the configured base URL. If a key leaks, revoke it at the provider immediately.
+- **Consent and blocklist:** the first scan requires explicit consent; private mode and the window-title blocklist prevent capture, but they are local controls, not a guarantee.
 - **Screenshots:** the full active monitor is captured and sent to the configured endpoint. There is no redaction in v0.1. Treat the provider as a data processor and avoid sensitive screens.
 - **Local state:** `~/.local/state/spectra-hud/session.json` stores the last 10 text events for up to one hour, mode 600. It is not encrypted.
 - **Prompt injection:** any text visible on screen can influence the model's output. The app only displays text; it does not execute commands or call tools.

@@ -6,6 +6,8 @@ Spectra HUD is a local application. There is no Spectra server, no account and n
 
 On every scan, the **active monitor** (the one under the mouse cursor) is captured as a JPEG image, downscaled to a maximum dimension of 1600 px.
 
+The first scan requires explicit consent in the command center. Private mode (`Ctrl+Alt+P`) and the window-title blocklist can prevent capture entirely.
+
 ## Where it goes
 
 The image is sent over HTTPS to the endpoint configured in `SPECTRA_BASE_URL`, together with the system prompt and a short session summary. That endpoint is a third-party provider chosen by you. Its own privacy policy and retention rules apply.
@@ -14,7 +16,8 @@ If you use the default endpoint, read the provider's terms. If you point `SPECTR
 
 ## What is stored locally
 
-- `.env` — your API key and settings (plaintext in v0.1).
+- The system keyring — your API key (service `spectra-hud`).
+- `~/.config/spectra-hud/config.json` — settings only, mode 600; a key fallback is stored here only if the keyring is unavailable.
 - `~/.local/state/spectra-hud/session.json` — up to 10 recent events: detected context, card labels, insights, questions and answers. Text only, no images. Mode 600. Expires after 1 hour of inactivity.
 - No logs are written by default; console output only.
 

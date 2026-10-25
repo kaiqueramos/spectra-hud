@@ -1,0 +1,55 @@
+name: Bug report
+description: Something broke or behaves unexpectedly.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not paste API keys, screenshots with personal data, or `.env` contents.
+        Logs are at `~/.local/state/spectra-hud/spectra.log`; redact anything sensitive.
+  - type: input
+    id: version
+    attributes:
+      label: Spectra version
+      placeholder: v0.1.0
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Distro / session / WM
+      placeholder: Ubuntu 24.04, X11, GNOME 46
+    validations:
+      required: true
+  - type: input
+    id: provider
+    attributes:
+      label: Provider and model
+      placeholder: CommandCode / deepseek/deepseek-v4.1-flash
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. ...\n2. ...\n3. ..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log lines
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I removed keys and personal data from this report.
+          required: true
+        - label: I am on X11 (not Wayland).
+          required: true

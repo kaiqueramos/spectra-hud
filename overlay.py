@@ -6,17 +6,18 @@ Suporta:
  - Tipografia refinada, layout com cabeçalho e rodapé separados (zero sobreposição).
 """
 
-import time
 import math
 import queue
+import threading
+import time
 import tkinter as tk
 import tkinter.font as tkfont
-import threading
-from Xlib import display, X
+
+import mss
 from PIL import Image
+from Xlib import X, display
 
 import ai_client
-
 
 # Identidade visual por tipo de ponto (campo "kind" devolvido pelo modelo).
 KIND_STYLES = {
@@ -29,6 +30,18 @@ KIND_STYLES = {
 
 def get_kind_style(kind: str | None) -> dict:
     return KIND_STYLES.get(kind or "info", KIND_STYLES["info"])
+
+
+def primary_monitor() -> dict:
+    """Monitor primário em coordenadas absolutas (evita centralizar no X combinado)."""
+    try:
+        with mss.mss() as sct:
+            for mon in sct.monitors[1:]:
+                if mon.get("is_primary"):
+                    return mon
+            return sct.monitors[1] if len(sct.monitors) > 1 else sct.monitors[0]
+    except Exception:
+        return {"left": 0, "top": 0, "width": 1920, "height": 1080}
 
 
 def blend_hex(c1: str, c2: str, t: float) -> str:
@@ -344,9 +357,16 @@ def compute_card_position(
     for c in candidates:
         if free_of_cards(c) and free_of_target(c):
             return c
-    for c in candidates:
-        if free_of_cards(c):
-            return c
+
+    # Nenhum candidato livre do alvo: usa uma coluna lateral previsível,
+    # em vez de cobrir o elemento com um card.
+    for col_x in (mon_x + mon_w - card_w - 30, mon_x + 30):
+        stack_y = mon_y + 55
+        while stack_y + card_h <= mon_y + mon_h - 25:
+            rect = (col_x, stack_y, card_w, card_h)
+            if not any(rects_overlap(rect, r) for r in placed):
+                return col_x, stack_y
+            stack_y += card_h + 12
 
     if placed:
         last_x, last_y, _, last_h = placed[-1]
@@ -437,7 +457,8 @@ class ScanIndicator:
             mon_x, mon_y = monitor.get("left", 0), monitor.get("top", 0)
             mon_w = monitor.get("width", 1920)
         else:
-            mon_x, mon_y, mon_w = 0, 0, self.root.winfo_screenwidth()
+            mon = primary_monitor()
+            mon_x, mon_y, mon_w = mon["left"], mon["top"], mon["width"]
         x = mon_x + (mon_w - w) // 2
         y = mon_y + 24
 
@@ -540,10 +561,9 @@ class PromptDialog:
         self.win.configure(bg="#0D110D")
 
         w, h = 680, 125
-        sw = self.win.winfo_screenwidth()
-        sh = self.win.winfo_screenheight()
-        cx = (sw - w) // 2
-        cy = max(180, (sh - h) // 3)
+        self.monitor = primary_monitor()
+        cx = self.monitor["left"] + (self.monitor["width"] - w) // 2
+        cy = self.monitor["top"] + max(180, (self.monitor["height"] - h) // 3)
         self.win.geometry(f"{w}x{h}+{cx}+{cy}")
 
         self.canvas = tk.Canvas(
@@ -621,9 +641,8 @@ class PromptDialog:
         new_h = approx_lines * 20 + 65
         w = 680
 
-        sw = self.win.winfo_screenwidth()
-        cx = (sw - w) // 2
-        cy = 160
+        cx = self.monitor["left"] + (self.monitor["width"] - w) // 2
+        cy = self.monitor["top"] + 160
         self.win.geometry(f"{w}x{new_h}+{cx}+{cy}")
 
         self.canvas.create_rectangle(0, 0, w, 32, fill="#111610", outline="")

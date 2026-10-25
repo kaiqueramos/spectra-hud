@@ -1,7 +1,25 @@
 import queue
 import tkinter as tk
 from unittest.mock import MagicMock
+
+import pytest
+
+import config
 import main
+
+
+@pytest.fixture(autouse=True)
+def _ready(monkeypatch):
+    cfg = dict(config.DEFAULTS)
+    cfg["consent_at"] = "test"
+    cfg["blocklist"] = []
+    monkeypatch.setattr(main, "cfg", cfg)
+    monkeypatch.setattr(main, "paused", False)
+    monkeypatch.setattr(main, "get_active_window_title", lambda: "")
+    monkeypatch.setattr(main.ai_client, "DEMO", False)
+    monkeypatch.setattr(main.ai_client, "LAST_ERROR_KIND", "")
+    while not main.action_queue.empty():
+        main.action_queue.get_nowait()
 
 
 def test_main_process_queue_clear_hud():
@@ -24,7 +42,7 @@ def test_main_process_queue_render_insights():
     img = MagicMock()
     insights = [{"label": "Teste", "insight": "OK"}]
 
-    main.action_queue.put(("RENDER_INSIGHTS", mon, img, insights))
+    main.action_queue.put(("RENDER_INSIGHTS", mon, img, insights, {"latency": 1.2}))
     main.process_queue(root)
 
     mock_overlay.render_insights.assert_called_once_with(mon, img, insights)
@@ -59,7 +77,7 @@ def test_main_process_queue_scan_indicator_events():
 
     main.action_queue.put(("SCAN_START", mon))
     main.action_queue.put(("SCAN_EMPTY", mon))
-    main.action_queue.put(("SCAN_FAIL", mon, "HTTP 401"))
+    main.action_queue.put(("SCAN_FAIL", mon, "HTTP 401", "auth"))
     main.process_queue(root)
 
     mock_overlay.scan_start.assert_called_once_with(mon)
@@ -80,7 +98,7 @@ def test_run_scan_worker_reports_api_failure(monkeypatch):
     main.run_scan_worker()
 
     assert main.action_queue.get_nowait() == ("SCAN_START", mon)
-    assert main.action_queue.get_nowait() == ("SCAN_FAIL", mon, "timeout")
+    assert main.action_queue.get_nowait() == ("SCAN_FAIL", mon, "timeout", "")
     assert main.is_analyzing is False
 
 

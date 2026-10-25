@@ -1,10 +1,10 @@
 from overlay import (
-    rects_overlap,
+    KIND_STYLES,
+    blend_hex,
     box_to_pixels,
     compute_card_position,
-    blend_hex,
     get_kind_style,
-    KIND_STYLES,
+    rects_overlap,
 )
 
 MON = {"left": 0, "top": 0, "width": 1920, "height": 1080}
@@ -80,6 +80,14 @@ def test_compute_card_position_avoids_placed_cards():
     placed = [(first[0], first[1], 380, 100)]
     second = compute_card_position(target, 380, 100, MON, placed)
     assert not rects_overlap((second[0], second[1], 380, 100), placed[0])
+
+
+def test_compute_card_position_uses_side_column_when_target_blocks_all():
+    # Alvo gigante cobre direita, esquerda, acima e abaixo.
+    target = (100, 100, 1700, 900)
+    x, y = compute_card_position(target, 380, 100, MON, [])
+    assert x in (MON["width"] - 380 - 30, 30)
+    assert not rects_overlap((x, y, 380, 100), (10, 10, 380, 100))
 
 
 def test_compute_card_position_without_target_stacks_on_right_column():
