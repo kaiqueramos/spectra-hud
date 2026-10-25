@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spectra HUD — Your screen, annotated.</title>
+  <meta name="description" content="A screen-aware HUD for Linux. Press a hotkey, and Spectra pins the next move to the exact element on screen. Open source, bring your own key.">
+  <meta name="theme-color" content="#080a08">
+  <meta property="og:title" content="Spectra HUD — Your screen, annotated.">
+  <meta property="og:description" content="A screen-aware HUD for Linux. One hotkey, three anchored cards, no telemetry.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://kaiqueramos.github.io/spectra-hud/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./fonts.css">
+  <link rel="stylesheet" href="./styles.css">
+  <noscript><style>.reveal{opacity:1;transform:none}</style></noscript>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="grain" aria-hidden="true"></div>
+  <div class="cursor" aria-hidden="true">
+    <span class="cursor-x"></span>
+    <span class="cursor-y"></span>
+    <span class="cursor-coord" data-coord>0000 / 0000</span>
+  </div>
+
+  <header class="nav" data-nav>
+    <div class="nav-inner">
+      <a class="brand" href="#top" aria-label="Spectra HUD, back to top">
+        <svg class="mark" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <circle cx="12" cy="12" r="2.2" fill="currentColor"/>
+        </svg>
+        <span class="brand-name">SPECTRA</span>
+        <span class="brand-sub">HUD</span>
+      </a>
+
+      <nav class="nav-links" aria-label="Primary">
+        <a href="#how">How it works</a>
+        <a href="#features">Features</a>
+        <a href="#hotkeys">Hotkeys</a>
+        <a href="#privacy">Privacy</a>
+      </nav>
+
+      <div class="nav-right">
+        <span class="nav-ver">v0.1.0</span>
+        <a class="btn btn-sm" href="https://github.com/kaiqueramos/spectra-hud">GitHub <span aria-hidden="true">↗</span></a>
+      </div>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- HERO -->
+    <section class="hero" id="top">
+      <div class="hero-copy">
+        <div class="data-strip" aria-label="Platform and license">
+          <span>Linux</span><span>X11</span><span>Apache 2.0</span><span>BYOK</span>
+        </div>
+
+        <h1 class="hero-title">
+          <span class="line"><span class="line-in">Your screen,</span></span>
+          <span class="line"><span class="line-in accent">annotated.</span></span>
+        </h1>
+
+        <p class="lede">Press a hotkey. Spectra reads the screen and pins the next move to the exact element.</p>
+
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#install">Install v0.1</a>
+          <a class="btn btn-ghost" href="https://github.com/kaiqueramos/spectra-hud">Read the source</a>
+        </div>
+
+        <p class="hero-note">36 tests. No telemetry. Your key stays local.</p>
+      </div>
+
+      <div class="hero-demo">
+        <div class="monitor" role="img" aria-label="Animated preview of the Spectra HUD: three cards anchored to a code editor, a dialog and a list.">
+          <div class="monitor-bar">
+            <span class="led" aria-hidden="true"></span>
+            <span class="mono">DISPLAY 1</span>
+            <span class="mono muted">2560 × 1440</span>
+            <span class="mono push">SPECTRA / LIVE</span>
+          </div>
+
+          <div class="screen" data-screen>
+            <div class="screen-dots" aria-hidden="true"></div>
+
+            <div class="win win-code">
+              <div class="win-bar"><span>payment_service.py</span><span class="muted">UTF-8</span></div>
+              <div class="code" aria-hidden="true">
+                <div class="ln"><b>38</b><span><i class="c-k">def</i> settle(payment):</span></div>
+                <div class="ln"><b>39</b><span>&nbsp;&nbsp;ledger = load(payment.id)</span></div>
+                <div class="ln"><b>40</b><span>&nbsp;&nbsp;<i class="c-k">if</i> ledger.closed:</span></div>
+                <div class="ln"><b>41</b><span>&nbsp;&nbsp;&nbsp;&nbsp;<i class="c-k">return</i> <i class="c-s">"skipped"</i></span></div>
+                <div class="ln is-error" data-target="1"><b>42</b><span>&nbsp;&nbsp;<i class="c-k">return</i> payment.user.id</span></div>
+                <div class="ln"><b>43</b><span>&nbsp;&nbsp;commit(ledger)</span></div>
+              </div>
+            </div>
+
+            <div class="win win-dialog">
+              <div class="win-bar">Confirm retry</div>
+              <p>The previous request timed out.</p>
+              <div class="dialog-actions" aria-hidden="true">
+                <span class="fake-btn">Cancel</span>
+                <span class="fake-btn primary" data-target="2">Retry</span>
+              </div>
+            </div>
+
+            <div class="win win-list">
+              <div class="win-bar">Queue</div>
+              <ul aria-hidden="true">
+                <li><span>#1042</span><span>settle</span></li>
+                <li class="is-dup" data-target="3"><span>#1043</span><span>settle</span></li>
+                <li><span>#1044</span><span>retry</span></li>
+              </ul>
+            </div>
+
+            <div class="scanline" aria-hidden="true"></div>
+            <div class="reticle" data-reticle aria-hidden="true"></div>
+
+            <article class="hud-card" data-card="1">
+              <div class="hud-card-head"><span class="tag tag-alert">ALERTA</span><span class="idx">01</span></div>
+              <p>Line 42 can be null. The build fails here.</p>
+              <div class="hud-card-foot">CLICK TO ASK</div>
+            </article>
+
+            <article class="hud-card" data-card="2">
+              <div class="hud-card-head"><span class="tag tag-action">AÇÃO</span><span class="idx">02</span></div>
+              <p>Choose Retry. The dialog keeps your draft.</p>
+              <div class="hud-card-foot">CLICK TO ASK</div>
+            </article>
+
+            <article class="hud-card" data-card="3">
+              <div class="hud-card-head"><span class="tag tag-item">ITEM</span><span class="idx">03</span></div>
+              <p>#1043 is a duplicate. Skip it.</p>
+              <div class="hud-card-foot">CLICK TO ASK</div>
+            </article>
+
+            <div class="hud-status">
+              <span>SCAN 0.8s</span><span>3 POINTS</span><span>JPEG 1600PX</span>
+            </div>
+          </div>
+        </div>
+        <p class="demo-caption"><span class="mono">FIG. 01</span> Cards are placed against the element, never on top of it.</p>
+      </div>
+    </section>
+
+    <!-- SPEC STRIP -->
+    <section class="spec-strip" aria-label="At a glance">
+      <div class="container spec-grid">
+        <div class="spec"><span class="mono dim">CAPTURE</span><strong>Active monitor</strong><span>not the primary</span></div>
+        <div class="spec"><span class="mono dim">MODEL</span><strong>Vision, any provider</strong><span>OpenAI-compatible</span></div>
+        <div class="spec"><span class="mono dim">MEMORY</span><strong>1 hour, sliding</strong><span>10 events, then gone</span></div>
+        <div class="spec"><span class="mono dim">LICENSE</span><strong>Apache 2.0</strong><span>fork it, ship it</span></div>
+      </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="how" id="how" data-how>
+      <div class="how-track">
+        <div class="how-sticky" data-how-sticky data-step="1">
+          <div class="how-visual" aria-hidden="true">
+            <div class="scope">
+              <div class="scope-corner tl"></div><div class="scope-corner tr"></div>
+              <div class="scope-corner bl"></div><div class="scope-corner br"></div>
+
+              <div class="layer layer-1">
+                <div class="scope-screen">
+                  <div class="sk-line w40"></div><div class="sk-line w70"></div><div class="sk-line w55"></div>
+                  <div class="sk-line w80"></div><div class="sk-line w35"></div>
+                </div>
+                <div class="scope-frame"></div>
+                <span class="scope-label mono">JPEG / 1600PX</span>
+              </div>
+
+              <div class="layer layer-2">
+                <div class="scope-screen dimmed">
+                  <div class="sk-line w40"></div><div class="sk-line w70"></div><div class="sk-line w55"></div>
+                  <div class="sk-line w80"></div><div class="sk-line w35"></div>
+                </div>
+                <div class="scope-scan"></div>
+                <span class="scope-label mono">MODEL / READING</span>
+              </div>
+
+              <div class="layer layer-3">
+                <div class="scope-screen dimmed">
+                  <div class="sk-line w40"></div><div class="sk-line w70"></div><div class="sk-line w55"></div>
+                  <div class="sk-line w80"></div><div class="sk-line w35"></div>
+                </div>
+                <div class="scope-box b1"></div>
+                <div class="scope-box b2"></div>
+                <div class="scope-box b3"></div>
+                <span class="scope-label mono">3 BOXES / 0..1000</span>
+              </div>
+
+              <div class="layer layer-4">
+                <div class="scope-screen dimmed">
+                  <div class="sk-line w40"></div><div class="sk-line w70"></div><div class="sk-line w55"></div>
+                  <div class="sk-line w80"></div><div class="sk-line w35"></div>
+                </div>
+                <div class="scope-prompt"><span class="mono">&gt;</span> <span class="typed">why is this null?</span><span class="caret"></span></div>
+                <div class="scope-answer">The ledger can close before the user is loaded. Guard the access.</div>
+                <span class="scope-label mono">FOLLOW-UP / IN PLACE</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="how-steps">
+            <article class="step is-active" data-step-block="1">
+              <span class="step-num">01</span>
+              <h3>Capture</h3>
+              <p>One hotkey grabs the monitor under your cursor. Nothing else.</p>
+            </article>
+            <article class="step" data-step-block="2">
+              <span class="step-num">02</span>
+              <h3>Read</h3>
+              <p>A vision model returns up to three points that matter, each with a bounding box.</p>
+            </article>
+            <article class="step" data-step-block="3">
+              <span class="step-num">03</span>
+              <h3>Anchor</h3>
+              <p>Cards land beside the exact element. The placement avoids the target and the other cards.</p>
+            </article>
+            <article class="step" data-step-block="4">
+              <span class="step-num">04</span>
+              <h3>Ask</h3>
+              <p>Click a card to go deeper. The answer replaces the card, in place.</p>
+            </article>
+          </div>
+        </div>
+        <div class="how-triggers" aria-hidden="true">
+          <span data-trigger="1" style="top: 12%"></span>
+          <span data-trigger="2" style="top: 37%"></span>
+          <span data-trigger="3" style="top: 62%"></span>
+          <span data-trigger="4" style="top: 87%"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="section" id="features">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-index mono">02</span>
+          <h2>Built like an instrument,<br>not a chatbot.</h2>
+        </div>
+
+        <div class="bento reveal">
+          <article class="cell cell-a">
+            <h3>Anchored, not floating.</h3>
+            <p>Every card is placed against a real element. The layout avoids covering the target and the other cards.</p>
+            <div class="diagram" aria-hidden="true">
+              <div class="d-target"><span></span></div>
+              <div class="d-line"></div>
+              <div class="d-card">
+                <span class="d-tag">ALERTA</span>
+                <span class="d-bar w70"></span>
+                <span class="d-bar w50"></span>
+              </div>
+            </div>
+          </article>
+
+          <article class="cell cell-b">
+            <h3>Bring your own key.</h3>
+            <p>Any OpenAI-compatible vision endpoint. The key stays in <code>.env</code>. No Spectra account.</p>
+            <pre class="mini-code"><code><span class="c-d"># .env</span>
+SPECTRA_API_KEY=<span class="c-s">sk-•••</span>
+SPECTRA_MODEL=<span class="c-s">your-vision-model</span></code></pre>
+          </article>
+
+          <article class="cell cell-c">
+            <h3>Memory that expires.</h3>
+            <p>The last ten events feed the next scan, then expire after an hour of silence.</p>
+            <div class="ticks" aria-hidden="true">
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <span class="mono dim">TTL 60:00</span>
+          </article>
+
+          <article class="cell cell-d">
+            <h3>Multi-monitor, actually.</h3>
+            <p>Captures the display under the mouse, not always the primary. Cards are clamped to that screen.</p>
+            <div class="monitors" aria-hidden="true">
+              <div class="mon"><span></span></div>
+              <div class="mon is-active"><span></span><i></i></div>
+            </div>
+          </article>
+
+          <article class="cell cell-e">
+            <h3>It tells you when it fails.</h3>
+            <p>No silent empty cards. Errors surface in the HUD with the reason and a timeout.</p>
+            <div class="error-line mono" aria-hidden="true">ERROR / HTTP 401 · key not set</div>
+          </article>
+
+          <article class="cell cell-f">
+            <h3>36 tests.</h3>
+            <p>Geometry, schema and parsing are covered. The overlay is tested by hand on X11.</p>
+            <div class="term-line mono" aria-hidden="true"><span class="c-g">$</span> pytest -q<br><span class="c-g">36 passed</span> in 0.40s</div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- HOTKEYS -->
+    <section class="section" id="hotkeys">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-index mono">03</span>
+          <h2>Five keys. No menus.</h2>
+        </div>
+
+        <div class="keys-layout">
+          <div class="keys-list">
+            <div class="key-row">
+              <div class="keys"><kbd>Ctrl</kbd><span>+</span><kbd>Space</kbd></div>
+              <div><strong>Scan or close</strong><span>Captures the active monitor, or clears the HUD.</span></div>
+            </div>
+            <div class="key-row">
+              <div class="keys"><kbd>Ctrl</kbd><span>+</span><kbd>Shift</kbd><span>+</span><kbd>Space</kbd></div>
+              <div><strong>Command bar</strong><span>Ask anything about the current screen.</span></div>
+            </div>
+            <div class="key-row">
+              <div class="keys"><kbd>Alt</kbd><span>+</span><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd></div>
+              <div><strong>Open a card</strong><span>Jumps straight to the question box.</span></div>
+            </div>
+            <div class="key-row">
+              <div class="keys"><kbd>Esc</kbd></div>
+              <div><strong>Dismiss</strong><span>Closes the prompt or cancels.</span></div>
+            </div>
+            <div class="key-row">
+              <div class="keys"><kbd>Drag</kbd></div>
+              <div><strong>Move a card</strong><span>Anywhere on the current monitor.</span></div>
+            </div>
+          </div>
+
+          <aside class="callout">
+            <span class="mono dim">HEADS-UP</span>
+            <h3>Ctrl+Space collides with IDE autocomplete.</h3>
+            <p>VS Code and JetBrains own that shortcut. If you code with Spectra open, change it:</p>
+            <pre class="mini-code"><code>SPECTRA_HOTKEY=<span class="c-s">&lt;ctrl&gt;+&lt;alt&gt;+&lt;space&gt;</span></code></pre>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRIVACY -->
+    <section class="section privacy-section" id="privacy">
+      <div class="container">
+        <div class="privacy-panel">
+          <div class="privacy-copy">
+            <span class="section-index mono">04</span>
+            <h2>It sees your screen.<br>That is the point.</h2>
+            <p>Every scan sends a JPEG of the active monitor to the endpoint you configure. There is no Spectra server, no account and no telemetry.</p>
+            <a class="link-arrow" href="https://github.com/kaiqueramos/spectra-hud/blob/main/PRIVACY.md">Read the privacy policy <span aria-hidden="true">→</span></a>
+          </div>
+
+          <div class="flow" aria-label="Data flow">
+            <div class="flow-node"><span class="mono dim">01</span><strong>Your screen</strong><span>active monitor only</span></div>
+            <div class="flow-arrow" aria-hidden="true"></div>
+            <div class="flow-node"><span class="mono dim">02</span><strong>Your endpoint</strong><span>the key you chose</span></div>
+            <div class="flow-arrow is-blocked" aria-hidden="true"><span>×</span></div>
+            <div class="flow-node is-dead"><span class="mono dim">03</span><strong>Spectra server</strong><span>does not exist</span></div>
+          </div>
+
+          <ul class="privacy-facts">
+            <li><span class="mono">NO TELEMETRY</span> No analytics, no pings, no account.</li>
+            <li><span class="mono">LOCAL CACHE</span> Text only, ten events, one hour.</li>
+            <li><span class="mono">NO REDACTION</span> v0.1 has no pause mode. Do not scan banking or passwords.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- INSTALL -->
+    <section class="section" id="install">
+      <div class="container install-grid">
+        <div class="install-copy">
+          <span class="section-index mono">05</span>
+          <h2>Clone. Add a key. Run.</h2>
+          <p>No package yet. The installer creates a virtualenv, copies the config and registers a desktop entry.</p>
+
+          <ul class="req-list">
+            <li><span class="mono">PLATFORM</span> Linux with X11</li>
+            <li><span class="mono">PYTHON</span> 3.10 or newer, with Tkinter</li>
+            <li><span class="mono">SYSTEM</span> <code>xdotool</code></li>
+            <li><span class="mono">KEY</span> any OpenAI-compatible vision endpoint</li>
+          </ul>
+
+          <p class="warn"><strong>Wayland is not supported in v0.1.</strong> Capture and global hotkeys need X11.</p>
+        </div>
+
+        <div class="terminal">
+          <div class="terminal-bar">
+            <span class="t-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="mono">spectra — bash</span>
+            <button class="copy-btn mono" data-copy>COPY</button>
+          </div>
+          <pre class="terminal-body"><code id="install-code"><span class="c-d"># 1. clone</span>
+git clone https://github.com/kaiqueramos/spectra-hud.git
+<span class="c-d"># 2. install</span>
+<span class="c-g">cd</span> spectra-hud && ./install.sh
+<span class="c-d"># 3. add your key</span>
+<span class="c-g">nano</span> .env
+<span class="c-d"># 4. run</span>
+./run.sh</code></pre>
+          <div class="terminal-foot mono"><span>APACHE 2.0</span><span>v0.1.0</span><span>LINUX / X11</span></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="#top">
+          <svg class="mark" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5" fill="none" stroke="currentColor" stroke-width="1.6"/>
+            <circle cx="12" cy="12" r="2.2" fill="currentColor"/>
+          </svg>
+          <span class="brand-name">SPECTRA</span><span class="brand-sub">HUD</span>
+        </a>
+        <p>A screen-aware HUD for Linux.<br>Open source, bring your own key.</p>
+      </div>
+
+      <nav class="footer-links" aria-label="Footer">
+        <a href="https://github.com/kaiqueramos/spectra-hud">GitHub</a>
+        <a href="https://github.com/kaiqueramos/spectra-hud/blob/main/README.md">Docs</a>
+        <a href="https://github.com/kaiqueramos/spectra-hud/blob/main/PRIVACY.md">Privacy</a>
+        <a href="https://github.com/kaiqueramos/spectra-hud/blob/main/LICENSE">License</a>
+      </nav>
+
+      <div class="footer-meta mono">
+        <span>SPECTRA / 0.1.0</span>
+        <span>© 2026 KAIQUE RAMOS</span>
+        <span>APACHE 2.0</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="./main.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../docs/fonts.css">
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    width: 1200px; height: 630px; overflow: hidden;
+    background: #080a08; color: #ece8dc;
+    font-family: "Barlow", sans-serif;
+    position: relative;
+  }
+  .grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(57,65,52,.18) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(57,65,52,.18) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(90% 90% at 60% 50%, #000 40%, transparent 100%);
+  }
+  .frame { position: absolute; inset: 28px; border: 1px solid #242a22; }
+  .corner { position: absolute; width: 18px; height: 18px; border-color: #ff5a1f; border-style: solid; }
+  .tl { left: 18px; top: 18px; border-width: 1px 0 0 1px; }
+  .tr { right: 18px; top: 18px; border-width: 1px 1px 0 0; }
+  .bl { left: 18px; bottom: 18px; border-width: 0 0 1px 1px; }
+  .br { right: 18px; bottom: 18px; border-width: 0 1px 1px 0; }
+  .brand {
+    position: absolute; left: 56px; top: 48px;
+    display: flex; align-items: center; gap: 10px;
+    font-family: "Barlow Condensed"; font-weight: 700; font-size: 24px;
+    letter-spacing: .14em;
+  }
+  .brand small { font-family: "IBM Plex Mono"; font-size: 10px; letter-spacing: .2em; color: #6b7267; }
+  .brand svg { width: 26px; height: 26px; }
+  h1 {
+    position: absolute; left: 54px; top: 150px;
+    font-family: "Barlow Condensed"; font-weight: 700;
+    font-size: 118px; line-height: .84; letter-spacing: -.012em;
+    text-transform: uppercase;
+  }
+  h1 span { color: #ff5a1f; }
+  .sub {
+    position: absolute; left: 58px; top: 405px;
+    font-size: 20px; color: #c9c6ba; max-width: 480px; line-height: 1.45;
+  }
+  .meta {
+    position: absolute; left: 58px; bottom: 56px;
+    font-family: "IBM Plex Mono"; font-size: 11px; letter-spacing: .16em;
+    color: #6b7267; display: flex; gap: 18px;
+  }
+  .meta b { color: #ff5a1f; font-weight: 400; }
+
+  .monitor {
+    position: absolute; right: 52px; top: 120px;
+    width: 500px; height: 360px;
+    border: 1px solid #394134; background: #0a0d0a;
+    box-shadow: 14px 14px 0 #040604;
+  }
+  .bar {
+    height: 28px; border-bottom: 1px solid #242a22;
+    display: flex; align-items: center; gap: 9px; padding: 0 11px;
+    font-family: "IBM Plex Mono"; font-size: 8px; letter-spacing: .12em; color: #6b7267;
+  }
+  .led { width: 6px; height: 6px; border-radius: 50%; background: #ff5a1f; }
+  .screen {
+    position: absolute; inset: 29px 0 0;
+    background-color: #090b09;
+    background-image:
+      linear-gradient(rgba(57,65,52,.2) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(57,65,52,.2) 1px, transparent 1px);
+    background-size: 24px 24px;
+    overflow: hidden;
+  }
+  .win {
+    position: absolute; border: 1px solid #293026; background: #0d110d;
+    font-family: "IBM Plex Mono"; font-size: 7.4px; color: #9aa292;
+  }
+  .code { left: 5%; top: 8%; width: 56%; height: 44%; padding: 10px; line-height: 1.8; }
+  .code i { color: #ffd8c8; font-style: normal; }
+  .err { color: #ff5a1f; }
+  .dialog { right: 5%; top: 12%; width: 33%; padding: 9px; line-height: 1.5; }
+  .dialog b { display: inline-block; margin-top: 8px; border: 1px solid #ff5a1f; color: #ff5a1f; padding: 2px 6px; font-weight: 400; }
+  .list { left: 6%; bottom: 8%; width: 34%; padding: 8px; line-height: 1.9; }
+  .list s { color: #ff5a1f; }
+  .card {
+    position: absolute; width: 172px; border: 1px solid #3b4336; background: #0d110d;
+    box-shadow: 5px 5px 0 rgba(0,0,0,.5);
+  }
+  .card .head {
+    display: flex; justify-content: space-between; padding: 4px 6px;
+    border-bottom: 1px solid #272e24; background: #111610;
+    font-family: "IBM Plex Mono"; font-size: 6.5px; letter-spacing: .12em; color: #ff5a1f;
+  }
+  .card .head em { color: #5d655a; font-style: normal; }
+  .card p { padding: 7px; font-size: 9.6px; line-height: 1.35; color: #dcd8cb; }
+  .c1 { left: 63%; top: 9%; }
+  .c2 { left: 63%; top: 51%; }
+  .status {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 18px;
+    border-top: 1px solid #222820; background: rgba(8,10,8,.92);
+    display: flex; align-items: center; gap: 14px; padding: 0 9px;
+    font-family: "IBM Plex Mono"; font-size: 6.5px; letter-spacing: .14em; color: #69705f;
+  }
+  .scan { position: absolute; left: 0; right: 0; top: 42%; height: 1px; background: #ff5a1f; box-shadow: 0 0 12px rgba(255,90,31,.8); }
+</style>
+</head>
+<body>
+  <div class="grid"></div>
+  <div class="frame"></div>
+  <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+
+  <div class="brand">
+    <svg viewBox="0 0 24 24"><path d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5" fill="none" stroke="#ff5a1f" stroke-width="1.8"/><circle cx="12" cy="12" r="2.2" fill="#ff5a1f"/></svg>
+    SPECTRA <small>HUD</small>
+  </div>
+
+  <h1>Your screen,<br><span>annotated.</span></h1>
+  <p class="sub">Press a hotkey. Spectra reads the screen and pins the next move to the exact element.</p>
+  <div class="meta"><span><b>●</b> LINUX / X11</span><span>APACHE 2.0</span><span>BYOK</span><span>v0.1.0</span></div>
+
+  <div class="monitor">
+    <div class="bar"><span class="led"></span><span>DISPLAY 1</span><span style="margin-left:auto">SPECTRA / LIVE</span></div>
+    <div class="screen">
+      <div class="win code">
+        def settle(payment):<br>
+        &nbsp;&nbsp;ledger = load(payment.id)<br>
+        &nbsp;&nbsp;if ledger.closed:<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;return "skipped"<br>
+        <i class="err">→ return payment.user.id</i><br>
+        &nbsp;&nbsp;commit(ledger)
+      </div>
+      <div class="win list">
+        #1042 settle<br>
+        <s>#1043 settle</s><br>
+        #1044 retry
+      </div>
+      <div class="scan"></div>
+      <div class="card c1"><div class="head"><span>ALERTA</span><em>01</em></div><p>Line 42 can be null. The build fails here.</p></div>
+      <div class="card c2"><div class="head"><span>AÇÃO</span><em>02</em></div><p>Choose Retry. The dialog keeps your draft.</p></div>
+      <div class="status"><span>SCAN 0.8s</span><span>3 POINTS</span><span>JPEG 1600PX</span></div>
+    </div>
+  </div>
+</body>
+</html>

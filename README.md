@@ -8,6 +8,14 @@
 
 **Status: v0.1 — experimental.** Linux + X11 only. Bring your own API key. The prompt is Brazilian Portuguese.
 
+[**Website**](https://kaiqueramos.github.io/spectra-hud/) · [**GitHub**](https://github.com/kaiqueramos/spectra-hud) · [**Privacy**](PRIVACY.md)
+
+<p align="center">
+  <a href="https://kaiqueramos.github.io/spectra-hud/">
+    <img src="docs/og.png" alt="Spectra HUD: your screen, annotated." width="100%">
+  </a>
+</p>
+
 ---
 
 ## Why
