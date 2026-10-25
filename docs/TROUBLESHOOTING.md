@@ -5,7 +5,7 @@
 - `echo $XDG_SESSION_TYPE` must be `x11`.
 - `python3 -c "import tkinter"` must work.
 - Logs: `~/.local/state/spectra-hud/spectra.log`.
-- Config: `~/.config/spectra-hud/config.json` (no key inside if keyring works).
+- Config: `~/.config/spectra-hud/config.yaml` (primary) and `config.json` (fallback); no key inside if the keyring works.
 
 ## HTTP 401 / 403
 
@@ -35,7 +35,7 @@ scan hotkey also cancels.
 
 ## Wayland
 
-v0.1 supports X11 only. The app exits with a clear message. Use an X11 session
+v0.2 supports X11 only. The app exits with a clear message. Use an X11 session
 or wait for the Wayland port.
 
 ## Tray icon missing
@@ -47,7 +47,7 @@ The app uses `pystray` with AppIndicator. On GNOME, enable the
 ## Keyring prompt / no keyring
 
 If `keyring` cannot access Secret Service, the key falls back to
-`~/.config/spectra-hud/config.json` (mode 600). Check that the keyring daemon is
+`~/.config/spectra-hud/config.json` (mode 600; YAML never stores the key). Check that the keyring daemon is
 running and unlocked.
 
 ## Hotkeys do not change
@@ -69,7 +69,7 @@ edit the list in the command center. The scan is refused **before** capture.
 ## Reset
 
 ```bash
-rm ~/.config/spectra-hud/config.json
+rm ~/.config/spectra-hud/config.yaml ~/.config/spectra-hud/config.json
 rm ~/.local/state/spectra-hud/session.json
 ```
 

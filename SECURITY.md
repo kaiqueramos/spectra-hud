@@ -4,7 +4,7 @@
 
 | Version | Supported |
 |---|---|
-| 0.1.x | Yes |
+| 0.2.x | Yes |
 
 ## Reporting a vulnerability
 
@@ -20,7 +20,7 @@ Spectra is a local desktop app that sends screenshots to a third-party model end
 
 - **API key:** stored in the system keyring (service `spectra-hud`); a 600 fallback file is used only when the keyring is unavailable. It is sent only to the configured base URL. If a key leaks, revoke it at the provider immediately.
 - **Consent and blocklist:** the first scan requires explicit consent; private mode and the window-title blocklist prevent capture, but they are local controls, not a guarantee.
-- **Screenshots:** the full active monitor is captured and sent to the configured endpoint. There is no redaction in v0.1. Treat the provider as a data processor and avoid sensitive screens.
+- **Screenshots:** the full active monitor is captured and sent to the configured endpoint. There is no pixel redaction in v0.2 (private mode and the blocklist are available). Treat the provider as a data processor and avoid sensitive screens.
 - **Local state:** `~/.local/state/spectra-hud/session.json` stores the last 10 text events for up to one hour, mode 600. It is not encrypted.
 - **Prompt injection:** any text visible on screen can influence the model's output. The app only displays text; it does not execute commands or call tools.
 - **Transport:** HTTPS is verified by Python's default SSL context. A custom `SPECTRA_BASE_URL` can point anywhere, including a malicious host — only use endpoints you trust.
@@ -28,6 +28,6 @@ Spectra is a local desktop app that sends screenshots to a third-party model end
 ## Hardening checklist for users
 
 - Use a dedicated API key with a spending limit.
-- Keep `.env` with mode `600`.
+- Keep the key in the system keyring; a 600 fallback file is used only if the keyring is unavailable.
 - Do not run Spectra on screens with passwords, banking or medical data.
 - Rotate the key if the machine is shared or the file was exposed.

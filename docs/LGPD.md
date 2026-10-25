@@ -9,7 +9,7 @@
 | Screenshot do monitor ativo | Tela do usuário | Endpoint do provedor escolhido | Não é salvo pelo Spectra |
 | Prompt do sistema + histórico curto | App | Mesmo endpoint | Sessão local de 1 h |
 | Chave de API | Usuário | System keyring | Até o usuário remover |
-| Configuração | Usuário | `~/.config/spectra-hud/config.json` (600) | Até o usuário remover |
+| Configuração | Usuário | `~/.config/spectra-hud/config.yaml` (600; JSON de compatibilidade) | Até o usuário remover |
 | Log de eventos | App | `~/.local/state/spectra-hud/spectra.log` | Rotação 1 MB × 3 |
 | Cache de sessão | App | `~/.local/state/spectra-hud/session.json` (600) | 1 h de inatividade |
 

@@ -14,7 +14,7 @@ if ! command -v xdotool >/dev/null; then
   echo "      Multi-monitor capture will fall back to the primary monitor."
 fi
 if [ "${XDG_SESSION_TYPE:-}" = "wayland" ]; then
-  echo "WARN: Wayland session detected. Spectra v0.1 supports X11 only."
+  echo "WARN: Wayland session detected. Spectra v0.2 supports X11 only."
 fi
 
 echo "==> Creating virtualenv"
@@ -27,7 +27,7 @@ pip install -r requirements.txt
 if [ ! -f .env ]; then
   cp .env.example .env
   chmod 600 .env
-  echo "==> Created .env — edit it and set SPECTRA_API_KEY"
+  echo "==> Created optional .env for CI/headless; the command center stores the key in the keyring"
 else
   echo "==> .env already exists, leaving it untouched"
 fi

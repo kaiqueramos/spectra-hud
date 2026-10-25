@@ -17,9 +17,9 @@ If you use the default endpoint, read the provider's terms. If you point `SPECTR
 ## What is stored locally
 
 - The system keyring — your API key (service `spectra-hud`).
-- `~/.config/spectra-hud/config.json` — settings only, mode 600; a key fallback is stored here only if the keyring is unavailable.
+- `~/.config/spectra-hud/config.yaml` — settings only, mode 600; `config.json` is kept as a compatibility fallback. A key fallback is stored there only if the keyring is unavailable.
 - `~/.local/state/spectra-hud/session.json` — up to 10 recent events: detected context, card labels, insights, questions and answers. Text only, no images. Mode 600. Expires after 1 hour of inactivity.
-- No logs are written by default; console output only.
+- `~/.local/state/spectra-hud/spectra.log` — rotating event log (1 MB × 3) without screenshots or keys.
 
 ## How to remove local data
 
@@ -27,11 +27,11 @@ If you use the default endpoint, read the provider's terms. If you point `SPECTR
 rm ~/.local/state/spectra-hud/session.json
 ```
 
-To revoke access, delete or rotate the key at your provider and remove `.env`.
+To revoke access, delete or rotate the key at your provider and remove the `spectra-hud` entry from your keyring (or clear the field in the command center).
 
 ## Sensitive screens
 
-v0.1 has **no redaction and no pause mode**. Do not trigger a scan while a password manager, banking app, medical record or private conversation is on screen. Quit Spectra when screen sharing.
+v0.2 has **private mode** and a window-title blocklist, but **no pixel redaction**. Do not trigger a scan while a password manager, banking app, medical record or private conversation is on screen. Quit Spectra when screen sharing.
 
 ## Legal
 

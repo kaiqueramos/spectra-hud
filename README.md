@@ -76,7 +76,7 @@ cd spectra-hud
 ./run.sh
 ```
 
-The first run opens the **command center**. Choose a provider, paste the key, click **Test vision**, accept the consent and save. The key goes to the system keyring; settings go to `~/.config/spectra-hud/config.json`.
+The first run opens the **command center**. Choose a provider, paste the key, click **Test vision**, accept the consent and save. The key goes to the system keyring; settings go to `~/.config/spectra-hud/config.yaml` (with a `config.json` fallback).
 
 Manual install:
 
