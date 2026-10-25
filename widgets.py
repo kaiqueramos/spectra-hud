@@ -10,6 +10,13 @@ import i18n
 import theme
 
 
+def blend(c1: str, c2: str, amount: float) -> str:
+    amount = max(0.0, min(1.0, amount))
+    a = [int(c1[i : i + 2], 16) for i in (1, 3, 5)]
+    b = [int(c2[i : i + 2], 16) for i in (1, 3, 5)]
+    return "#" + "".join(f"{round(x + (y - x) * amount):02X}" for x, y in zip(a, b))
+
+
 def rounded_rect(canvas: tk.Canvas, x1: int, y1: int, x2: int, y2: int, r: int, **kwargs):
     """Retângulo arredondado via polígono suave."""
     points = [
@@ -144,6 +151,8 @@ class PillButton(tk.Canvas):
 class Switch(tk.Frame):
     """Switch deslizante com label clicável."""
 
+    W, H = 52, 26
+
     def __init__(
         self,
         parent,
@@ -159,16 +168,19 @@ class Switch(tk.Frame):
         self.variable = variable
         self.command = command
         self._hover = False
+        self._knob_x = 5.0
+        self._anim_job = None
         self.canvas = tk.Canvas(
             self,
-            width=44,
-            height=22,
+            width=self.W,
+            height=self.H,
             bg=t["bg"],
             highlightthickness=0,
             bd=0,
             cursor="hand2",
+            takefocus=1,
         )
-        self.canvas.pack(side="left", pady=(1, 0))
+        self.canvas.pack(side="left")
         self.label = tk.Label(
             self,
             text=text,
@@ -180,14 +192,15 @@ class Switch(tk.Frame):
             wraplength=wraplength or 0,
             cursor="hand2",
         )
-        self.label.pack(side="left", padx=(10, 0))
+        self.label.pack(side="left", padx=(10, 0), pady=(1, 0))
         for widget in (self.canvas, self.label):
             widget.bind("<Button-1>", lambda _e: self.toggle())
             widget.bind("<Enter>", self._on_enter)
             widget.bind("<Leave>", self._on_leave)
         self.canvas.bind("<space>", lambda _e: self.toggle())
         self.canvas.bind("<Return>", lambda _e: self.toggle())
-        self.canvas.configure(takefocus=1)
+        self.canvas.bind("<FocusIn>", lambda _e: self._draw())
+        self.canvas.bind("<FocusOut>", lambda _e: self._draw())
         self._draw()
 
     def _on_enter(self, _e=None):
@@ -202,31 +215,55 @@ class Switch(tk.Frame):
         t = self.t
         on = bool(self.variable.get())
         self.canvas.delete("all")
-        track = t["accent"] if on else t["line2"]
-        if self._hover and not on:
-            track = t["muted"]
-        rounded_rect(self.canvas, 2, 3, 42, 19, 8, fill=track, outline="")
-        knob_x = 22 if on else 4
+        track = t["accent"] if on else t["panel2"]
+        outline = t["accent"] if on else t["line2"]
+        if self._hover:
+            track = blend(track, t["text"], 0.08)
+            outline = t["accent"]
+        if self.canvas.focus_get() is self.canvas:
+            outline = t["accent"]
+        rounded_rect(
+            self.canvas, 2, 3, 50, 23, 10,
+            fill=track, outline=outline, width=1,
+        )
+        knob_x = 31.0 if on else 5.0
         if pos is not None:
             knob_x = pos
-        self.canvas.create_oval(knob_x, 5, knob_x + 14, 19, fill=t["text"], outline=t["bg"], width=1)
+        self._knob_x = knob_x
+        # Sombra curta e knob com folga real dentro do trilho.
+        self.canvas.create_oval(
+            knob_x + 1, 7, knob_x + 15, 21,
+            fill=blend(track, t["bg"], 0.28), outline="",
+        )
+        self.canvas.create_oval(
+            knob_x, 6, knob_x + 14, 20,
+            fill=t["text"], outline=blend(t["bg"], t["text"], 0.35), width=1,
+        )
 
     def toggle(self):
         new = not bool(self.variable.get())
         self.variable.set(new)
-        self._animate(22 if new else 4)
+        self._animate(31.0 if new else 5.0)
         if self.command:
             self.command()
 
-    def _animate(self, target: int):
-        current = 22 if target == 4 else 4
-        steps = 4
+    def _animate(self, target: float):
+        if self._anim_job is not None:
+            try:
+                self.after_cancel(self._anim_job)
+            except Exception:
+                pass
+            self._anim_job = None
+        start = self._knob_x
+        steps = 6
 
         def step(i: int):
-            pos = current + (target - current) * (i / steps)
-            self._draw(pos)
+            fraction = 1.0 - (1.0 - i / steps) ** 3
+            self._draw(start + (target - start) * fraction)
             if i < steps:
-                self.after(16, lambda: step(i + 1))
+                self._anim_job = self.after(14, lambda: step(i + 1))
+            else:
+                self._anim_job = None
 
         step(0)
 
