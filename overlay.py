@@ -18,18 +18,19 @@ from PIL import Image
 from Xlib import X, display
 
 import ai_client
+import theme
+
 
 # Identidade visual por tipo de ponto (campo "kind" devolvido pelo modelo).
-KIND_STYLES = {
-    "alerta": {"accent": "#FF5A1F", "border": "#FF5A1F", "icon": "⚠", "tag": "ALERTA"},
-    "acao": {"accent": "#E9E6DC", "border": "#6F776B", "icon": "▶", "tag": "AÇÃO"},
-    "item": {"accent": "#A8B894", "border": "#5C6652", "icon": "◆", "tag": "ITEM"},
-    "info": {"accent": "#9AA3A0", "border": "#5A625C", "icon": "●", "tag": "INFO"},
-}
-
-
 def get_kind_style(kind: str | None) -> dict:
-    return KIND_STYLES.get(kind or "info", KIND_STYLES["info"])
+    t = theme.current()
+    styles = {
+        "alerta": {"accent": t["accent"], "border": t["accent"], "icon": "⚠", "tag": "ALERTA"},
+        "acao": {"accent": t["text"], "border": t["muted"], "icon": "▶", "tag": "AÇÃO"},
+        "item": {"accent": t["success"], "border": t["muted"], "icon": "◆", "tag": "ITEM"},
+        "info": {"accent": t["muted"], "border": t["dim"], "icon": "●", "tag": "INFO"},
+    }
+    return styles.get(kind or "info", styles["info"])
 
 
 def primary_monitor() -> dict:
@@ -171,11 +172,13 @@ class CardWidget:
         # Cores: acento e borda dependem do tipo do ponto; o resto é fixo.
         self.PRIMARY_ACCENT = self.style["accent"]
         self.BORDER_COLOR = self.style["border"]
-        self.BG_DARK = "#0D110D"  # Spectra panel
-        self.HEADER_BG = "#111610"  # Spectra header
-        self.FOOTER_BG = "#0A0D09"  # Spectra footer
-        self.TEXT_COLOR = "#ECE8DC"  # Bone
-        self.SUBTEXT_COLOR = "#949B8F"  # Muted
+        t = theme.current()
+        self.BG_DARK = t["card"]
+        self.HEADER_BG = t["header"]
+        self.FOOTER_BG = t["panel2"]
+        self.TEXT_COLOR = t["text"]
+        self.SUBTEXT_COLOR = t["dim"]
+        self.LINE_COLOR = t["line"]
 
         self.canvas = tk.Canvas(
             self.win,
@@ -431,28 +434,30 @@ class ScanIndicator:
     """Pílula no topo do monitor: 'escaneando' pulsando com cronômetro, ou mensagem curta (erro/aviso)."""
 
     H = 34
-    BG = "#0D110D"
 
     def __init__(self, parent_root):
         self.root = parent_root
+        self.BG = theme.current()["panel"]
         self.win = None
         self.canvas = None
         self._dot = None
         self._text_id = None
         self._label = ""
-        self._accent = KIND_STYLES["info"]["accent"]
+        self._accent = get_kind_style("info")["accent"]
         self._t0 = 0.0
         self._tick_job = None
         self._hide_job = None
 
-    def _build(self, monitor: dict | None, text: str, reserve: str, kind: str):
+    def _build(self, monitor: dict | None, text: str, reserve: str, kind: str, cancel: bool = False):
         self.hide()
+        t = theme.current()
+        self.BG = t["panel"]
         style = get_kind_style(kind)
         self._accent = style["accent"]
         self._label = text
 
         font = tkfont.Font(family="DejaVu Sans", size=9, weight="bold")
-        w = font.measure(reserve) + 60
+        w = font.measure(reserve) + (140 if cancel else 60)
         if monitor:
             mon_x, mon_y = monitor.get("left", 0), monitor.get("top", 0)
             mon_w = monitor.get("width", 1920)
@@ -486,13 +491,27 @@ class ScanIndicator:
             cy,
             text=text,
             font=("DejaVu Sans", 9, "bold"),
-            fill="#ECE8DC",
+            fill=t["text"],
             anchor="w",
         )
+        if cancel:
+            cancel_id = self.canvas.create_text(
+                w - 12,
+                cy,
+                text="CANCELAR",
+                font=("DejaVu Sans", 8, "bold"),
+                fill=t["accent"],
+                anchor="e",
+            )
+            self.canvas.tag_bind(cancel_id, "<ButtonRelease-1>", lambda _e: self._cancel())
+
+    def _cancel(self):
+        ai_client.cancel_scan()
+        self.hide()
 
     def show_scanning(self, monitor: dict | None):
         label = "ESCANEANDO TELA…"
-        self._build(monitor, label, f"{label}  999s", "info")
+        self._build(monitor, label, f"{label}  999s", "info", cancel=True)
         self._t0 = time.time()
         self._tick()
 
@@ -554,11 +573,12 @@ class PromptDialog:
         self.callback_submit = callback_submit
         self.callback_close = callback_close
 
+        self.t = theme.current()
         self.win = tk.Toplevel(parent_root)
         self.win.title("PROMPT")
         self.win.attributes("-topmost", True)
         self.win.attributes("-type", "dialog")
-        self.win.configure(bg="#0D110D")
+        self.win.configure(bg=self.t["bg"])
 
         w, h = 680, 125
         self.monitor = primary_monitor()
@@ -567,17 +587,17 @@ class PromptDialog:
         self.win.geometry(f"{w}x{h}+{cx}+{cy}")
 
         self.canvas = tk.Canvas(
-            self.win, bg="#0D110D", highlightthickness=1, highlightbackground="#FF5A1F"
+            self.win, bg=self.t["bg"], highlightthickness=1, highlightbackground=self.t["accent"]
         )
         self.canvas.pack(fill="both", expand=True)
 
-        self.canvas.create_rectangle(0, 0, w, 32, fill="#111610", outline="")
+        self.canvas.create_rectangle(0, 0, w, 32, fill=self.t["header"], outline="")
         self.canvas.create_text(
             16,
             16,
             text=f"◈ {title.upper()}",
             font=("DejaVu Sans", 9, "bold"),
-            fill="#FF5A1F",
+            fill=self.t["accent"],
             anchor="w",
         )
         self.canvas.create_text(
@@ -585,23 +605,23 @@ class PromptDialog:
             16,
             text="[ESC FECHA • ENTER ENVIA]",
             font=("DejaVu Sans", 7, "bold"),
-            fill="#949B8F",
+            fill=self.t["dim"],
             anchor="e",
         )
 
         self.canvas.create_text(
-            16, 48, text=subtitle, font=("DejaVu Sans", 9), fill="#C9C6BA", anchor="w"
+            16, 48, text=subtitle, font=("DejaVu Sans", 9), fill=self.t["muted"], anchor="w"
         )
 
         self.entry = tk.Entry(
             self.win,
-            bg="#111610",
-            fg="#ECE8DC",
-            insertbackground="#FF5A1F",
+            bg=self.t["input"],
+            fg=self.t["text"],
+            insertbackground=self.t["accent"],
             font=("DejaVu Sans", 11),
             relief="flat",
             highlightthickness=1,
-            highlightbackground="#FF5A1F",
+            highlightbackground=self.t["accent"],
         )
         self.entry.place(x=16, y=68, width=w - 32, height=36)
 
@@ -625,7 +645,7 @@ class PromptDialog:
             114,
             text="◈ Processando com contexto visual e histórico...",
             font=("DejaVu Sans", 8, "italic"),
-            fill="#A8B894",
+            fill=self.t["success"],
             anchor="w",
         )
         self.callback_submit(text, self)
@@ -645,13 +665,13 @@ class PromptDialog:
         cy = self.monitor["top"] + 160
         self.win.geometry(f"{w}x{new_h}+{cx}+{cy}")
 
-        self.canvas.create_rectangle(0, 0, w, 32, fill="#111610", outline="")
+        self.canvas.create_rectangle(0, 0, w, 32, fill=self.t["header"], outline="")
         self.canvas.create_text(
             16,
             16,
             text="◈ ANÁLISE DETALHADA",
             font=("DejaVu Sans", 9, "bold"),
-            fill="#FF5A1F",
+            fill=self.t["accent"],
             anchor="w",
         )
         self.canvas.create_text(
@@ -659,7 +679,7 @@ class PromptDialog:
             16,
             text="[ESC P/ FECHAR]",
             font=("DejaVu Sans", 7, "bold"),
-            fill="#949B8F",
+            fill=self.t["dim"],
             anchor="e",
         )
 
@@ -668,7 +688,7 @@ class PromptDialog:
             50,
             text=full_text,
             font=("DejaVu Sans", 10),
-            fill="#ECE8DC",
+            fill=self.t["text"],
             width=w - 36,
             anchor="nw",
         )

@@ -83,6 +83,7 @@ DEFAULTS: dict[str, Any] = {
     "hotkey_center": "<ctrl>+<alt>+c",
     "hotkey_pause": "<ctrl>+<alt>+p",
     "paused": False,
+    "theme": "spectra",
     "blocklist": DEFAULT_BLOCKLIST,
     "consent_at": None,
     "pricing": {},

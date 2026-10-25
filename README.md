@@ -39,6 +39,7 @@ No server, no telemetry. The screenshot goes only to the endpoint **you** config
 - **Command center** (`Ctrl+Alt+C`): provider presets, base URL, model, API key, consent, pause, blocklist, hotkeys and pricing.
 - **First-run wizard**: opens automatically when there is no key or consent.
 - **Vision test**: sends a red/blue image and confirms the model actually sees it.
+- **10 themes** (5 dark, 5 light) with live preview; `Ctrl+T` cycles. See [docs/THEMES.md](docs/THEMES.md).
 - **System keyring** for the API key (fallback to a 600 config file).
 - **Tray icon** (AppIndicator) with scan, pause and quit.
 - Global scan hotkey with toggle and a “scanning” indicator.
@@ -50,7 +51,7 @@ No server, no telemetry. The screenshot goes only to the endpoint **you** config
 - Multi-monitor aware (X11), with a safe side-column fallback when the model’s box is bad.
 - Bring your own key: any OpenAI-compatible vision model.
 - Local models via Ollama.
-- 53 unit tests.
+- 55 unit tests.
 
 ## Requirements
 
@@ -122,6 +123,7 @@ See [docs/PROVIDERS.md](docs/PROVIDERS.md) for presets and the vision test.
 | `Ctrl+Shift+Space` | Global command bar |
 | `Ctrl+Alt+C` | Command center |
 | `Ctrl+Alt+P` | Pause / resume |
+| `Ctrl+T` | Cycle themes in the command center |
 | `Alt+1..3` | Open the question box for card 1..3 |
 | `Esc` | Close the active prompt |
 | Click card | Ask a follow-up about that item |

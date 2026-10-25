@@ -1,5 +1,4 @@
 from overlay import (
-    KIND_STYLES,
     blend_hex,
     box_to_pixels,
     compute_card_position,
@@ -100,9 +99,9 @@ def test_compute_card_position_without_target_stacks_on_right_column():
 
 
 def test_kind_styles_and_fallback():
-    assert get_kind_style("alerta") is KIND_STYLES["alerta"]
-    assert get_kind_style("desconhecido") is KIND_STYLES["info"]
-    assert get_kind_style(None) is KIND_STYLES["info"]
+    assert get_kind_style("alerta")["tag"] == "ALERTA"
+    assert get_kind_style("desconhecido")["tag"] == "INFO"
+    assert get_kind_style(None)["tag"] == "INFO"
 
 
 def test_blend_hex():

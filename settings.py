@@ -1,4 +1,4 @@
-"""Centro de comando / wizard de primeira execução do Spectra."""
+"""Centro de comando / wizard do Spectra, com temas dark e light."""
 
 from __future__ import annotations
 
@@ -11,19 +11,14 @@ import mss
 
 import ai_client
 import config
+import theme
 
-INK = "#080a08"
-PANEL = "#0d110d"
-LINE = "#2a3227"
-BONE = "#ece8dc"
-TEXT = "#c9c6ba"
-DIM = "#7a8276"
-SIGNAL = "#ff5a1f"
 MONO = ("DejaVu Sans Mono", 9)
+MONO_S = ("DejaVu Sans Mono", 8)
 MONO_B = ("DejaVu Sans Mono", 9, "bold")
 BODY = ("DejaVu Sans", 10)
 BODY_B = ("DejaVu Sans", 10, "bold")
-LABEL = ("DejaVu Sans Mono", 8)
+DISPLAY = ("DejaVu Sans Condensed", 20, "bold")
 
 
 class CommandCenter:
@@ -39,24 +34,12 @@ class CommandCenter:
         self.on_quit = on_quit
         self.first_run = first_run
         self.cfg = config.load()
+        self.theme_key = self.cfg.get("theme", "spectra")
+        theme.set_current(self.theme_key)
         self._test_queue: queue.Queue = queue.Queue()
         self._testing = False
-
-        self.win = tk.Toplevel(root)
-        self.win.title("Spectra HUD — Centro de Comando")
-        self.win.configure(bg=INK)
-        self.win.attributes("-topmost", True)
-        self.win.geometry("860x880")
-        self.win.minsize(760, 720)
-        self.win.protocol("WM_DELETE_WINDOW", self.close)
-        self.win.bind("<Escape>", lambda _e: self.close())
-        self.win.bind("<Control-s>", lambda _e: self.save())
-        self.win.bind("<F5>", lambda _e: self.test_vision())
-
-        monitor = self._target_monitor()
-        x = monitor["left"] + max(10, (monitor["width"] - 860) // 2)
-        y = monitor["top"] + max(20, (monitor["height"] - 880) // 2)
-        self.win.geometry(f"860x880+{x}+{y}")
+        self._block_cache = "\n".join(self.cfg.get("blocklist") or config.DEFAULT_BLOCKLIST)
+        self._led_on = True
 
         self.provider_keys = list(config.PRESETS.keys())
         self.provider_labels = [config.PRESETS[k]["label"] for k in self.provider_keys]
@@ -76,30 +59,45 @@ class CommandCenter:
         self.status_var = tk.StringVar(value="")
         self.meta_var = tk.StringVar(value=self._meta_text())
         self.show_key_var = tk.BooleanVar(value=False)
-
         price = (self.cfg.get("pricing") or {}).get(self.cfg.get("model", ""), {})
-        self.price_in_var = tk.StringVar(
-            value=str(price.get("in", "")) if price else ""
-        )
-        self.price_out_var = tk.StringVar(
-            value=str(price.get("out", "")) if price else ""
-        )
+        self.price_in_var = tk.StringVar(value=str(price.get("in", "")) if price else "")
+        self.price_out_var = tk.StringVar(value=str(price.get("out", "")) if price else "")
 
-        self._build()
-        self._refresh_meta()
+        self.win = tk.Toplevel(root)
+        self.win.title("Spectra HUD — Command Center")
+        self.win.configure(bg=theme.current()["bg"])
+        self.win.attributes("-topmost", True)
+        self.win.minsize(900, 760)
+        self.win.protocol("WM_DELETE_WINDOW", self.close)
+        self.win.bind("<Escape>", lambda _e: self.close())
+        self.win.bind("<Control-s>", lambda _e: self.save())
+        self.win.bind("<F5>", lambda _e: self.test_vision())
+        self.win.bind("<Control-t>", lambda _e: self._cycle_theme())
+
+        mon = self._target_monitor()
+        w, h = 1060, 860
+        x = mon["left"] + max(10, (mon["width"] - w) // 2)
+        y = mon["top"] + max(20, (mon["height"] - h) // 2)
+        self.win.geometry(f"{w}x{h}+{x}+{y}")
+
+        self.canvas = tk.Canvas(self.win, bg=theme.current()["bg"], highlightthickness=0)
+        self.canvas.pack(fill="both", expand=True)
+        self.canvas.bind("<Configure>", lambda _e: self._draw_grid())
+
+        self.body = tk.Frame(self.win, bg=theme.current()["bg"])
+        self.body.place(x=26, y=20, relwidth=1, relheight=1, width=-52, height=-40)
+
+        self._render()
         self.win.after(100, self._poll_test)
         self.win.after(700, self._refresh_meta)
+        self.win.after(600, self._pulse)
         self.win.update_idletasks()
-        print(
-            "BTN test", self.test_btn.winfo_rootx(), self.test_btn.winfo_rooty(),
-            "size", self.test_btn.winfo_width(), self.test_btn.winfo_height(),
-            flush=True,
-        )
+        self._draw_grid()
         self.win.lift()
         self.win.focus_force()
 
+    # ------------------------------------------------------------------ infra
     def _target_monitor(self) -> dict:
-        """Monitor sob o cursor (ou o primário) para não abrir no outro display."""
         try:
             with mss.mss() as sct:
                 monitors = sct.monitors[1:] or [sct.monitors[0]]
@@ -110,196 +108,315 @@ class CommandCenter:
         except Exception:
             return {"left": 0, "top": 0, "width": 1920, "height": 1080}
 
-    # ------------------------------------------------------------------ UI
-    def _build(self):
-        wrap = tk.Frame(self.win, bg=INK)
-        wrap.pack(fill="both", expand=True, padx=28, pady=22)
+    def _draw_grid(self):
+        t = theme.get(self.theme_key)
+        c = self.canvas
+        if not c.winfo_exists():
+            return
+        c.delete("grid")
+        w, h = c.winfo_width(), c.winfo_height()
+        for x in range(0, w, 40):
+            c.create_line(x, 0, x, h, fill=t["grid"], tags="grid")
+        for y in range(0, h, 40):
+            c.create_line(0, y, w, y, fill=t["grid"], tags="grid")
+        s = 22
+        for x1, y1, x2, y2 in [
+            (18, 18, 18 + s, 18),
+            (18, 18, 18, 18 + s),
+            (w - 18, 18, w - 18 - s, 18),
+            (w - 18, 18, w - 18, 18 + s),
+            (18, h - 18, 18 + s, h - 18),
+            (18, h - 18, 18, h - 18 - s),
+            (w - 18, h - 18, w - 18 - s, h - 18),
+            (w - 18, h - 18, w - 18, h - 18 - s),
+        ]:
+            c.create_line(x1, y1, x2, y2, fill=t["accent"], width=1, tags="grid")
 
-        head = tk.Frame(wrap, bg=INK)
+    def _pulse(self):
+        if not self.win.winfo_exists():
+            return
+        try:
+            if self.pause_var.get():
+                self.led.itemconfigure("led", fill=theme.get(self.theme_key)["warning"])
+            else:
+                self._led_on = not self._led_on
+                t = theme.get(self.theme_key)
+                self.led.itemconfigure("led", fill=t["accent"] if self._led_on else t["line2"])
+        except Exception:
+            pass
+        self.win.after(700, self._pulse)
+
+    # ------------------------------------------------------------------ render
+    def _render(self):
+        t = theme.get(self.theme_key)
+        theme.set_current(self.theme_key)
+        self.win.configure(bg=t["bg"])
+        self.canvas.configure(bg=t["bg"])
+        self.body.configure(bg=t["bg"])
+        for child in self.body.winfo_children():
+            child.destroy()
+
+        head = tk.Frame(self.body, bg=t["bg"])
         head.pack(fill="x")
-        tk.Label(
-            head,
-            text="SPECTRA",
-            bg=INK,
-            fg=BONE,
-            font=("DejaVu Sans Condensed", 20, "bold"),
-        ).pack(side="left")
-        tk.Label(head, text=" / COMMAND CENTER", bg=INK, fg=DIM, font=MONO).pack(
-            side="left", padx=(8, 0), pady=(6, 0)
-        )
-        tk.Label(
-            head,
-            text="v0.1.0  ·  X11",
-            bg=INK,
-            fg=DIM,
-            font=LABEL,
-        ).pack(side="right", pady=(6, 0))
 
-        if (
-            self.first_run
-            or not config.has_consent(self.cfg)
-            or not config.get_api_key(self.cfg)
-        ):
-            banner = tk.Frame(
-                wrap, bg="#160d07", highlightthickness=1, highlightbackground=SIGNAL
-            )
-            banner.pack(fill="x", pady=(16, 0))
+        mark = tk.Canvas(head, width=30, height=30, bg=t["bg"], highlightthickness=0)
+        mark.create_line(3, 9, 3, 3, 9, 3, fill=t["accent"], width=2)
+        mark.create_line(21, 3, 27, 3, 27, 9, fill=t["accent"], width=2)
+        mark.create_line(27, 21, 27, 27, 21, 27, fill=t["accent"], width=2)
+        mark.create_line(9, 27, 3, 27, 3, 21, fill=t["accent"], width=2)
+        mark.create_rectangle(13, 13, 17, 17, fill=t["accent"], outline="")
+        mark.pack(side="left", pady=(2, 0))
+
+        title = tk.Frame(head, bg=t["bg"])
+        title.pack(side="left", padx=(10, 0))
+        tk.Label(title, text="SPECTRA", bg=t["bg"], fg=t["text"], font=DISPLAY).pack(side="left")
+        tk.Label(title, text="/ COMMAND CENTER", bg=t["bg"], fg=t["dim"], font=MONO).pack(
+            side="left", padx=(8, 0), pady=(7, 0)
+        )
+
+        right = tk.Frame(head, bg=t["bg"])
+        right.pack(side="right")
+        self.led = tk.Canvas(right, width=12, height=12, bg=t["bg"], highlightthickness=0)
+        self.led.create_oval(2, 2, 10, 10, fill=t["accent"], outline="", tags="led")
+        self.led.pack(side="left", padx=(0, 6), pady=(4, 0))
+        state = "PAUSED" if self.pause_var.get() else "READY"
+        tk.Label(right, text=state, bg=t["bg"], fg=t["dim"], font=MONO_S).pack(side="left", padx=(0, 14))
+        tk.Label(
+            right,
+            text=f"{t['mode'].upper()} · {t['name'].upper()}",
+            bg=t["bg"],
+            fg=t["accent"],
+            font=MONO_S,
+        ).pack(side="left", padx=(0, 14))
+        tk.Label(right, text="v0.1.0", bg=t["bg"], fg=t["dim"], font=MONO_S).pack(side="left")
+
+        rule = tk.Frame(self.body, bg=t["line"], height=1)
+        rule.pack(fill="x", pady=(12, 0))
+
+        banner = None
+        if self.first_run or not config.has_consent(self.cfg) or not config.get_api_key(self.cfg):
+            banner = tk.Frame(self.body, bg=t["panel"], highlightthickness=1, highlightbackground=t["accent"])
+            banner.pack(fill="x", pady=(10, 0))
             tk.Label(
                 banner,
-                text="Primeira execução: escolha o provedor, cole a chave e teste a visão antes de salvar.",
-                bg="#160d07",
-                fg=TEXT,
-                font=BODY,
+                text="FIRST RUN  /  escolha o provedor, cole a chave, teste a visão e aceite o consentimento.",
+                bg=t["panel"],
+                fg=t["text"],
+                font=MONO_S,
                 anchor="w",
-                padx=12,
-                pady=9,
+                padx=10,
+                pady=8,
             ).pack(fill="x")
+        self.banner = banner
 
-        form = tk.Frame(wrap, bg=INK)
-        form.pack(fill="x", pady=(18, 0))
-        form.columnconfigure(1, weight=1)
+        content = tk.Frame(self.body, bg=t["bg"])
+        content.pack(fill="both", expand=True, pady=(14, 0))
+        content.columnconfigure(0, weight=1, minsize=600)
+        content.columnconfigure(1, weight=0, minsize=330)
+        content.rowconfigure(0, weight=1)
 
-        row = 0
-        self._label(form, "PROVEDOR", row)
-        menu = tk.OptionMenu(
-            form, self.provider_var, *self.provider_labels, command=self._on_provider
+        left = tk.Frame(content, bg=t["bg"])
+        left.grid(row=0, column=0, sticky="nsew", padx=(0, 22))
+        rightp = tk.Frame(content, bg=t["bg"])
+        rightp.grid(row=0, column=1, sticky="nsew")
+
+        self._build_left(left, t)
+        self._build_right(rightp, t)
+
+        status = tk.Frame(self.body, bg=t["panel"], highlightthickness=1, highlightbackground=t["line"])
+        status.pack(fill="x", pady=(12, 0))
+        tk.Label(status, text="LAST SCAN", bg=t["panel"], fg=t["accent"], font=MONO_S).pack(
+            anchor="w", padx=10, pady=(6, 0)
         )
-        menu.configure(
-            bg=PANEL,
-            fg=BONE,
-            activebackground=PANEL,
-            activeforeground=SIGNAL,
-            highlightthickness=1,
-            highlightbackground=LINE,
-            relief="flat",
-            font=BODY,
-            anchor="w",
-            padx=8,
-        )
-        menu["menu"].configure(
-            bg=PANEL,
-            fg=BONE,
-            activebackground=SIGNAL,
-            activeforeground="#080a08",
-            font=BODY,
-        )
-        menu.grid(row=row, column=1, sticky="ew", pady=3)
-
-        row += 1
-        self._label(form, "BASE URL", row)
-        self._entry(form, self.base_var, row)
-
-        row += 1
-        self._label(form, "MODELO", row)
-        self._entry(form, self.model_var, row)
-
-        row += 1
-        self._label(form, "API KEY", row)
-        key_wrap = tk.Frame(form, bg=INK)
-        key_wrap.grid(row=row, column=1, sticky="ew", pady=3)
-        key_wrap.columnconfigure(0, weight=1)
-        self.key_entry = tk.Entry(
-            key_wrap,
-            textvariable=self.key_var,
-            show="•",
-            bg=PANEL,
-            fg=BONE,
-            insertbackground=SIGNAL,
-            relief="flat",
-            highlightthickness=1,
-            highlightbackground=LINE,
-            font=MONO,
-            width=40,
-        )
-        self.key_entry.grid(row=0, column=0, sticky="ew", ipady=5)
-        tk.Checkbutton(
-            key_wrap,
-            text="mostrar",
-            variable=self.show_key_var,
-            command=self._toggle_key,
-            bg=INK,
-            fg=DIM,
-            selectcolor=INK,
-            activebackground=INK,
-            activeforeground=BONE,
-            font=LABEL,
-            highlightthickness=0,
-            bd=0,
-        ).grid(row=0, column=1, padx=(8, 0))
-
-        row += 1
-        consent = tk.Checkbutton(
-            form,
-            text="Entendo que cada scan envia um JPEG da tela ativa para o provedor escolhido.",
-            variable=self.consent_var,
-            bg=INK,
-            fg=TEXT,
-            selectcolor=INK,
-            activebackground=INK,
-            activeforeground=BONE,
-            font=BODY,
-            highlightthickness=0,
-            bd=0,
+        tk.Label(
+            status,
+            textvariable=self.meta_var,
+            bg=t["panel"],
+            fg=t["text"],
+            font=MONO_S,
             anchor="w",
             justify="left",
-            wraplength=560,
-        )
-        consent.grid(row=row, column=1, sticky="w", pady=(8, 2))
+            padx=10,
+        ).pack(fill="x")
+        tk.Label(
+            status,
+            textvariable=self.status_var,
+            bg=t["panel"],
+            fg=t["dim"],
+            font=MONO_S,
+            anchor="w",
+            justify="left",
+            padx=10,
+        ).pack(fill="x", pady=(0, 6))
 
+        actions = tk.Frame(self.body, bg=t["bg"])
+        actions.pack(fill="x", pady=(12, 0))
+        self.test_btn = self._button(actions, "TESTAR VISÃO", self.test_vision, t, primary=False)
+        self.test_btn.pack(side="left")
+        if self._testing:
+            self.test_btn.configure(state="disabled")
+        self._button(actions, "SALVAR", self.save, t, primary=True).pack(side="left", padx=(8, 0))
+        self._button(actions, "LOGS", self.open_logs, t).pack(side="right")
+        self._button(actions, "LIMPAR CACHE", self.clear_cache, t).pack(side="right", padx=(0, 8))
+        self._button(actions, "SAIR", self.quit, t).pack(side="right", padx=(0, 8))
+
+        if banner is not None:
+            self.first_run = True
+
+    def _build_left(self, parent, t):
+        form = parent
+        form.columnconfigure(1, weight=1)
+        row = 0
+        row = self._section(form, "01 / CONNECTION", row, t)
+
+        self._label(form, "PROVIDER", row, t)
+        menu = tk.OptionMenu(form, self.provider_var, *self.provider_labels, command=self._on_provider)
+        menu.configure(
+            bg=t["input"],
+            fg=t["text"],
+            activebackground=t["line"],
+            activeforeground=t["accent"],
+            highlightthickness=1,
+            highlightbackground=t["line"],
+            relief="flat",
+            font=MONO,
+            anchor="w",
+            padx=8,
+            width=32,
+        )
+        menu["menu"].configure(
+            bg=t["panel"],
+            fg=t["text"],
+            activebackground=t["accent"],
+            activeforeground=t["accent_ink"],
+            font=MONO,
+        )
+        menu.grid(row=row, column=1, sticky="ew", pady=3)
         row += 1
-        pause = tk.Checkbutton(
+
+        for label, var, show in [
+            ("BASE URL", self.base_var, ""),
+            ("MODELO", self.model_var, ""),
+            ("API KEY", self.key_var, "•"),
+        ]:
+            self._label(form, label, row, t)
+            if label == "API KEY":
+                wrap = tk.Frame(form, bg=t["bg"])
+                wrap.grid(row=row, column=1, sticky="ew", pady=3)
+                wrap.columnconfigure(0, weight=1)
+                self.key_entry = tk.Entry(
+                    wrap,
+                    textvariable=var,
+                    show=show,
+                    bg=t["input"],
+                    fg=t["text"],
+                    insertbackground=t["accent"],
+                    relief="flat",
+                    highlightthickness=1,
+                    highlightbackground=t["line"],
+                    font=MONO,
+                )
+                self.key_entry.grid(row=0, column=0, sticky="ew", ipady=5)
+                tk.Checkbutton(
+                    wrap,
+                    text="mostrar",
+                    variable=self.show_key_var,
+                    command=self._toggle_key,
+                    bg=t["bg"],
+                    fg=t["dim"],
+                    selectcolor=t["panel"],
+                    activebackground=t["bg"],
+                    activeforeground=t["text"],
+                    font=MONO_S,
+                    highlightthickness=0,
+                    bd=0,
+                ).grid(row=0, column=1, padx=(8, 0))
+            else:
+                tk.Entry(
+                    form,
+                    textvariable=var,
+                    bg=t["input"],
+                    fg=t["text"],
+                    insertbackground=t["accent"],
+                    relief="flat",
+                    highlightthickness=1,
+                    highlightbackground=t["line"],
+                    font=MONO,
+                ).grid(row=row, column=1, sticky="ew", pady=3, ipady=5)
+            row += 1
+
+        cons = tk.Checkbutton(
             form,
-            text="Iniciar pausado (private mode): nada é capturado até você retomar.",
-            variable=self.pause_var,
-            bg=INK,
-            fg=TEXT,
-            selectcolor=INK,
-            activebackground=INK,
-            activeforeground=BONE,
+            text="Consinto em enviar um JPEG da tela ativa para o provedor escolhido.",
+            variable=self.consent_var,
+            bg=t["bg"],
+            fg=t["text"],
+            selectcolor=t["panel"],
+            activebackground=t["bg"],
+            activeforeground=t["text"],
             font=BODY,
             highlightthickness=0,
             bd=0,
             anchor="w",
+            wraplength=560,
         )
-        pause.grid(row=row, column=1, sticky="w", pady=2)
-
-        # blocklist
+        cons.grid(row=row, column=1, sticky="w", pady=(8, 0))
         row += 1
-        self._label(form, "BLOQUEIO", row)
-        block_wrap = tk.Frame(form, bg=INK)
-        block_wrap.grid(row=row, column=1, sticky="ew", pady=(6, 2))
-        tk.Label(
-            block_wrap,
-            text="Se o título da janela ativa contiver um destes termos, o scan é bloqueado (um por linha):",
-            bg=INK,
-            fg=DIM,
-            font=LABEL,
+        tk.Checkbutton(
+            form,
+            text="Iniciar pausado (private mode): nada é capturado até retomar.",
+            variable=self.pause_var,
+            command=self._update_led,
+            bg=t["bg"],
+            fg=t["text"],
+            selectcolor=t["panel"],
+            activebackground=t["bg"],
+            activeforeground=t["text"],
+            font=BODY,
+            highlightthickness=0,
+            bd=0,
             anchor="w",
-        ).pack(fill="x")
+        ).grid(row=row, column=1, sticky="w", pady=(2, 0))
+        row += 1
+
+        row = self._section(form, "02 / GUARDRAILS", row, t)
+        self._label(form, "BLOCKLIST", row, t)
+        block_wrap = tk.Frame(form, bg=t["bg"])
+        block_wrap.grid(row=row, column=1, sticky="ew", pady=(4, 0))
+        block_wrap.columnconfigure(0, weight=1)
         self.block_text = tk.Text(
             block_wrap,
-            height=5,
-            bg=PANEL,
-            fg=TEXT,
-            insertbackground=SIGNAL,
+            height=4,
+            bg=t["input"],
+            fg=t["text"],
+            insertbackground=t["accent"],
             relief="flat",
             highlightthickness=1,
-            highlightbackground=LINE,
-            font=MONO,
+            highlightbackground=t["line"],
+            font=MONO_S,
             padx=8,
             pady=6,
             wrap="word",
         )
-        self.block_text.pack(fill="x", pady=(4, 0))
-        self.block_text.insert(
-            "1.0", "\n".join(self.cfg.get("blocklist") or config.DEFAULT_BLOCKLIST)
+        self.block_text.grid(row=0, column=0, sticky="ew")
+        self.block_text.insert("1.0", self._block_cache)
+        scroll = tk.Scrollbar(
+            block_wrap,
+            command=self.block_text.yview,
+            bg=t["panel"],
+            troughcolor=t["bg"],
+            activebackground=t["accent"],
+            highlightthickness=0,
+            bd=0,
+            width=10,
         )
-
-        # hotkeys
+        scroll.grid(row=0, column=1, sticky="ns")
+        self.block_text.configure(yscrollcommand=scroll.set)
         row += 1
-        self._label(form, "ATALHOS", row)
-        hk = tk.Frame(form, bg=INK)
-        hk.grid(row=row, column=1, sticky="ew", pady=(6, 2))
+
+        self._label(form, "ATALHOS", row, t)
+        hk = tk.Frame(form, bg=t["bg"])
+        hk.grid(row=row, column=1, sticky="w", pady=(4, 0))
         for i, (label, var) in enumerate(
             [
                 ("scan", self.hotkey_scan_var),
@@ -308,155 +425,211 @@ class CommandCenter:
                 ("pausa", self.hotkey_pause_var),
             ]
         ):
-            tk.Label(hk, text=label, bg=INK, fg=DIM, font=LABEL).grid(
-                row=i, column=0, sticky="w", padx=(0, 8), pady=2
+            tk.Label(hk, text=label, bg=t["bg"], fg=t["dim"], font=MONO_S).grid(
+                row=i // 2, column=(i % 2) * 2, sticky="w", padx=(0, 6), pady=2
             )
             tk.Entry(
                 hk,
                 textvariable=var,
-                bg=PANEL,
-                fg=TEXT,
-                insertbackground=SIGNAL,
+                bg=t["input"],
+                fg=t["text"],
+                insertbackground=t["accent"],
                 relief="flat",
                 highlightthickness=1,
-                highlightbackground=LINE,
-                font=MONO,
-                width=28,
-            ).grid(row=i, column=1, sticky="w", pady=2, ipady=4)
-
-        # pricing
+                highlightbackground=t["line"],
+                font=MONO_S,
+                width=25,
+            ).grid(row=i // 2, column=(i % 2) * 2 + 1, sticky="w", padx=(0, 12), pady=2, ipady=3)
         row += 1
-        self._label(form, "PREÇO / 1M", row)
-        price_wrap = tk.Frame(form, bg=INK)
-        price_wrap.grid(row=row, column=1, sticky="w", pady=3)
-        tk.Label(price_wrap, text="in $", bg=INK, fg=DIM, font=LABEL).pack(side="left")
-        tk.Entry(
-            price_wrap,
-            textvariable=self.price_in_var,
-            bg=PANEL,
-            fg=TEXT,
-            insertbackground=SIGNAL,
-            relief="flat",
-            highlightthickness=1,
-            highlightbackground=LINE,
-            font=MONO,
-            width=10,
-        ).pack(side="left", padx=(4, 14), ipady=4)
-        tk.Label(price_wrap, text="out $", bg=INK, fg=DIM, font=LABEL).pack(side="left")
-        tk.Entry(
-            price_wrap,
-            textvariable=self.price_out_var,
-            bg=PANEL,
-            fg=TEXT,
-            insertbackground=SIGNAL,
-            relief="flat",
-            highlightthickness=1,
-            highlightbackground=LINE,
-            font=MONO,
-            width=10,
-        ).pack(side="left", padx=(4, 0), ipady=4)
 
-        # status
-        status_wrap = tk.Frame(
-            wrap, bg=PANEL, highlightthickness=1, highlightbackground=LINE
-        )
-        status_wrap.pack(fill="x", pady=(18, 0))
-        tk.Label(status_wrap, text="STATUS", bg=PANEL, fg=SIGNAL, font=LABEL).pack(
-            anchor="w", padx=12, pady=(9, 0)
-        )
-        tk.Label(
-            status_wrap,
-            textvariable=self.meta_var,
-            bg=PANEL,
-            fg=TEXT,
-            font=MONO,
-            anchor="w",
-            justify="left",
-            padx=12,
-            pady=4,
-        ).pack(fill="x")
-        tk.Label(
-            status_wrap,
-            textvariable=self.status_var,
-            bg=PANEL,
-            fg=DIM,
-            font=MONO,
-            anchor="w",
-            justify="left",
-            padx=12,
-        ).pack(fill="x", pady=(0, 9))
+        row = self._section(form, "03 / METERING", row, t)
+        self._label(form, "PREÇO / 1M", row, t)
+        price = tk.Frame(form, bg=t["bg"])
+        price.grid(row=row, column=1, sticky="w", pady=3)
+        for label, var in [("in $", self.price_in_var), ("out $", self.price_out_var)]:
+            tk.Label(price, text=label, bg=t["bg"], fg=t["dim"], font=MONO_S).pack(side="left")
+            tk.Entry(
+                price,
+                textvariable=var,
+                bg=t["input"],
+                fg=t["text"],
+                insertbackground=t["accent"],
+                relief="flat",
+                highlightthickness=1,
+                highlightbackground=t["line"],
+                font=MONO,
+                width=9,
+            ).pack(side="left", padx=(4, 14), ipady=4)
 
-        # buttons
-        btns = tk.Frame(wrap, bg=INK)
-        btns.pack(fill="x", pady=(18, 0))
-        self.test_btn = self._button(
-            btns, "TESTAR VISÃO", self.test_vision, outline=True
-        )
-        self.test_btn.pack(side="left")
-        self._button(btns, "SALVAR", self.save, primary=True).pack(
-            side="left", padx=(10, 0)
-        )
-        self._button(btns, "ABRIR LOGS", self.open_logs, outline=True).pack(
-            side="left", padx=(10, 0)
-        )
-        self._button(btns, "LIMPAR CACHE", self.clear_cache, outline=True).pack(
-            side="left", padx=(10, 0)
-        )
-        self._button(btns, "SAIR", self.quit, outline=True).pack(side="right")
-
-        foot = tk.Frame(wrap, bg=INK)
-        foot.pack(fill="x", pady=(14, 0))
-        tk.Label(
-            foot,
-            text="Dica: o teste envia uma imagem vermelha/azul e confirma se o modelo realmente enxerga.",
-            bg=INK,
-            fg=DIM,
-            font=LABEL,
-            anchor="w",
-        ).pack(fill="x")
-
-    def _label(self, parent, text, row):
-        tk.Label(parent, text=text, bg=INK, fg=DIM, font=LABEL, anchor="w").grid(
-            row=row, column=0, sticky="w", padx=(0, 16), pady=(8, 2)
-        )
-
-    def _entry(self, parent, var, row):
-        tk.Entry(
+    def _build_right(self, parent, t):
+        self._section(parent, "04 / PREVIEW", 0, t, grid=True)
+        preview = tk.Canvas(
             parent,
-            textvariable=var,
-            bg=PANEL,
-            fg=BONE,
-            insertbackground=SIGNAL,
-            relief="flat",
+            width=310,
+            height=174,
+            bg=t["panel"],
             highlightthickness=1,
-            highlightbackground=LINE,
-            font=MONO,
-            width=48,
-        ).grid(row=row, column=1, sticky="ew", pady=3, ipady=5)
+            highlightbackground=t["line"],
+        )
+        preview.grid(row=1, column=0, sticky="w", pady=(4, 0))
+        for x in range(0, 310, 20):
+            preview.create_line(x, 0, x, 174, fill=t["grid"])
+        for y in range(0, 174, 20):
+            preview.create_line(0, y, 310, y, fill=t["grid"])
+        preview.create_rectangle(24, 28, 286, 120, fill=t["card"], outline=t["card_line"])
+        preview.create_rectangle(24, 28, 286, 48, fill=t["header"], outline=t["card_line"])
+        preview.create_rectangle(24, 28, 28, 120, fill=t["accent"], outline="")
+        preview.create_text(38, 38, text="ALERTA", fill=t["accent"], font=("DejaVu Sans Mono", 6), anchor="w")
+        preview.create_text(276, 38, text="01", fill=t["dim"], font=("DejaVu Sans Mono", 6), anchor="e")
+        preview.create_text(
+            38,
+            64,
+            text="O retorno sai antes do commit.\nO ledger nunca é gravado.",
+            fill=t["text"],
+            font=("DejaVu Sans", 8),
+            anchor="nw",
+        )
+        preview.create_text(
+            38, 106, text="CLIQUE P/ PERGUNTAR", fill=t["dim"], font=("DejaVu Sans Mono", 5), anchor="w"
+        )
+        preview.create_text(
+            24,
+            142,
+            text=f"{t['name'].upper()} / {t['mode'].upper()}",
+            fill=t["muted"],
+            font=MONO_S,
+            anchor="w",
+        )
+        preview.create_text(286, 142, text="3 PONTOS · 7.5s", fill=t["dim"], font=MONO_S, anchor="e")
 
-    def _button(self, parent, text, command, primary=False, outline=False):
-        bg = SIGNAL if primary else PANEL
-        fg = "#080a08" if primary else TEXT
-        b = tk.Button(
+        self._section(parent, "05 / THEMES", 2, t, grid=True, pady=(14, 0))
+        tk.Label(
+            parent,
+            text="Ctrl+T cicla · aplica no HUD e no centro",
+            bg=t["bg"],
+            fg=t["dim"],
+            font=MONO_S,
+            anchor="w",
+        ).grid(row=3, column=0, sticky="w", pady=(0, 2))
+        themes_frame = tk.Frame(parent, bg=t["bg"])
+        themes_frame.grid(row=4, column=0, sticky="ew", pady=(0, 0))
+        themes_frame.columnconfigure(0, weight=1)
+        themes_frame.columnconfigure(1, weight=1)
+        r = 0
+        for group, keys in [("DARK", theme.DARK), ("LIGHT", theme.LIGHT)]:
+            tk.Label(themes_frame, text=group, bg=t["bg"], fg=t["dim"], font=MONO_S).grid(
+                row=r, column=0, columnspan=2, sticky="w", pady=(4, 2)
+            )
+            r += 1
+            for i, key in enumerate(keys):
+                self._theme_button(themes_frame, key, r + i // 2, i % 2, t)
+            r += (len(keys) + 1) // 2
+
+    def _theme_button(self, parent, key: str, row: int, col: int, t):
+        th = theme.get(key)
+        selected = key == self.theme_key
+        btn = tk.Button(
+            parent,
+            text=f"■  {th['name']}",
+            command=lambda k=key: self.set_theme(k),
+            bg=th["panel"],
+            fg=th["accent"],
+            activebackground=th["panel2"],
+            activeforeground=th["accent"],
+            highlightthickness=1,
+            highlightbackground=t["accent"] if selected else t["line"],
+            relief="flat",
+            anchor="w",
+            font=("DejaVu Sans", 8),
+            padx=8,
+            pady=4,
+            cursor="hand2",
+            bd=0,
+        )
+        btn.grid(row=row, column=col, sticky="ew", padx=(0, 6), pady=2)
+
+    def _section(self, parent, text, row, t, grid=False, pady=(14, 0)):
+        if grid:
+            f = tk.Frame(parent, bg=t["bg"])
+            f.grid(row=row, column=0, sticky="ew", pady=pady)
+            tk.Label(f, text=text, bg=t["bg"], fg=t["accent"], font=MONO_S).pack(side="left")
+            tk.Frame(f, bg=t["line"], height=1).pack(
+                side="left", fill="x", expand=True, padx=(10, 0), pady=(7, 0)
+            )
+            return row + 1
+        f = tk.Frame(parent, bg=t["bg"])
+        f.grid(row=row, column=0, columnspan=2, sticky="ew", pady=pady)
+        tk.Label(f, text=text, bg=t["bg"], fg=t["accent"], font=MONO_S).pack(side="left")
+        tk.Frame(f, bg=t["line"], height=1).pack(
+            side="left", fill="x", expand=True, padx=(10, 0), pady=(7, 0)
+        )
+        return row + 1
+
+    def _label(self, parent, text, row, t):
+        tk.Label(parent, text=text, bg=t["bg"], fg=t["dim"], font=MONO_S, anchor="w").grid(
+            row=row, column=0, sticky="w", padx=(0, 14), pady=(6, 2)
+        )
+
+    def _button(self, parent, text, command, t, primary=False):
+        bg = t["accent"] if primary else t["panel"]
+        fg = t["accent_ink"] if primary else t["text"]
+        return tk.Button(
             parent,
             text=text,
             command=command,
             bg=bg,
             fg=fg,
-            activebackground=BONE if primary else LINE,
-            activeforeground=INK,
+            activebackground=t["text"] if primary else t["line"],
+            activeforeground=t["bg"],
             relief="flat",
             highlightthickness=1,
-            highlightbackground=SIGNAL if primary else LINE,
+            highlightbackground=t["accent"] if primary else t["line"],
             font=MONO_B,
-            padx=14,
+            padx=13,
             pady=7,
             cursor="hand2",
             bd=0,
         )
-        return b
 
-    # ------------------------------------------------------------------ actions
+    # ------------------------------------------------------------------ state
+    def _meta_text(self):
+        meta = getattr(ai_client, "LAST_META", {}) or {}
+        if not meta:
+            return "Nenhum scan ainda nesta sessão."
+        parts = []
+        if meta.get("latency") is not None:
+            parts.append(f"{meta['latency']:.1f}s")
+        if meta.get("model"):
+            parts.append(str(meta["model"]))
+        usage = meta.get("usage") or {}
+        if usage:
+            parts.append(f"{usage.get('prompt_tokens', 0)} in / {usage.get('completion_tokens', 0)} out")
+        cost = meta.get("cost")
+        parts.append(f"US$ {cost:.4f}" if cost is not None else "custo: configure preço")
+        return "  ·  ".join(parts)
+
+    def _refresh_meta(self):
+        if not self.win.winfo_exists():
+            return
+        self.meta_var.set(self._meta_text())
+        self.win.after(1000, self._refresh_meta)
+
+    def _update_led(self):
+        if getattr(self, "led", None) is not None:
+            t = theme.get(self.theme_key)
+            self.led.itemconfigure("led", fill=t["warning"] if self.pause_var.get() else t["accent"])
+
+    def _toggle_key(self):
+        self.key_entry.configure(show="" if self.show_key_var.get() else "•")
+
+    def _cycle_theme(self):
+        keys = theme.DARK + theme.LIGHT
+        try:
+            idx = keys.index(self.theme_key)
+        except ValueError:
+            idx = 0
+        self.set_theme(keys[(idx + 1) % len(keys)])
+
     def _on_provider(self, label: str):
         try:
             key = self.provider_keys[self.provider_labels.index(label)]
@@ -469,24 +642,19 @@ class CommandCenter:
             self.key_var.set("ollama")
         self.status_var.set(f"Preset: {preset.get('label')}")
 
-    def _toggle_key(self):
-        self.key_entry.configure(show="" if self.show_key_var.get() else "•")
-
     def _form_cfg(self) -> dict[str, Any]:
+        self._block_cache = self.block_text.get("1.0", "end").strip()
         cfg = dict(self.cfg)
         cfg["base_url"] = self.base_var.get().strip().rstrip("/")
         cfg["model"] = self.model_var.get().strip()
         cfg["provider"] = config.infer_provider(cfg["base_url"])
         cfg["paused"] = bool(self.pause_var.get())
+        cfg["theme"] = self.theme_key
         cfg["hotkey_scan"] = self.hotkey_scan_var.get().strip()
         cfg["hotkey_bar"] = self.hotkey_bar_var.get().strip()
         cfg["hotkey_center"] = self.hotkey_center_var.get().strip()
         cfg["hotkey_pause"] = self.hotkey_pause_var.get().strip()
-        cfg["blocklist"] = [
-            line.strip()
-            for line in self.block_text.get("1.0", "end").splitlines()
-            if line.strip()
-        ]
+        cfg["blocklist"] = [line.strip() for line in self._block_cache.splitlines() if line.strip()]
         model = cfg["model"]
         pin, pout = self.price_in_var.get().strip(), self.price_out_var.get().strip()
         pricing = dict(cfg.get("pricing") or {})
@@ -508,15 +676,11 @@ class CommandCenter:
         if not cfg["model"]:
             self.status_var.set("Informe o modelo.")
             return
-        if not self.key_var.get().strip() and config.preset_for(cfg["provider"]).get(
-            "needs_key", True
-        ):
+        if not self.key_var.get().strip() and config.preset_for(cfg["provider"]).get("needs_key", True):
             self.status_var.set("Informe a API key (ou use Ollama local).")
             return
         if not self.consent_var.get() and not config.has_consent(self.cfg):
-            self.status_var.set(
-                "Marque o consentimento de envio do screenshot antes de salvar."
-            )
+            self.status_var.set("Marque o consentimento antes de salvar.")
             return
         if self.consent_var.get() and not config.has_consent(self.cfg):
             cfg = config.mark_consent(cfg)
@@ -525,15 +689,23 @@ class CommandCenter:
         self.cfg = cfg
         ai_client.reload_config(cfg)
         self.on_saved(cfg)
-        self.status_var.set("Salvo. Atalhos novos exigem reiniciar o app.")
-        self._refresh_meta()
         self.first_run = False
-        if self.banner is not None:
-            try:
-                self.banner.pack_forget()
-            except Exception:
-                pass
-            self.banner = None
+        self.status_var.set("Salvo. Atalhos novos exigem reiniciar o app.")
+        self._render()
+
+    def set_theme(self, key: str):
+        if self._testing:
+            self.status_var.set("Aguarde o teste terminar para trocar o tema.")
+            return
+        self._block_cache = self.block_text.get("1.0", "end").strip()
+        self.theme_key = key
+        theme.set_current(key)
+        self.cfg["theme"] = key
+        config.save(self.cfg)
+        self.on_saved(self.cfg)
+        self._render()
+        self._draw_grid()
+        self.status_var.set(f"Tema: {theme.get(key)['name']}")
 
     def test_vision(self):
         if self._testing:
@@ -546,7 +718,7 @@ class CommandCenter:
             return
         self._testing = True
         self.test_btn.configure(state="disabled")
-        self.status_var.set("Testando visão... (pode levar alguns segundos)")
+        self.status_var.set("Testando visão...")
 
         def worker():
             try:
@@ -564,40 +736,15 @@ class CommandCenter:
                 self._testing = False
                 if not self.win.winfo_exists():
                     return
-                self.test_btn.configure(state="normal")
-                prefix = "OK" if ok else "FALHOU"
-                self.status_var.set(f"{prefix} · {msg} · {latency:.1f}s")
+                try:
+                    self.test_btn.configure(state="normal")
+                except Exception:
+                    pass
+                self.status_var.set(f"{'OK' if ok else 'FALHOU'} · {msg} · {latency:.1f}s")
         except queue.Empty:
             pass
         if self.win.winfo_exists():
             self.win.after(150, self._poll_test)
-
-    def _meta_text(self):
-        meta = getattr(ai_client, "LAST_META", {}) or {}
-        if not meta:
-            return "Nenhum scan ainda nesta sessão."
-        parts = []
-        if meta.get("latency") is not None:
-            parts.append(f"{meta['latency']:.1f}s")
-        if meta.get("model"):
-            parts.append(str(meta["model"]))
-        usage = meta.get("usage") or {}
-        if usage:
-            parts.append(
-                f"{usage.get('prompt_tokens', 0)} in / {usage.get('completion_tokens', 0)} out"
-            )
-        cost = meta.get("cost")
-        if cost is not None:
-            parts.append(f"US$ {cost:.4f}")
-        else:
-            parts.append("custo: configure preço")
-        return "  ·  ".join(parts) if parts else "Sem dados."
-
-    def _refresh_meta(self):
-        if not self.win.winfo_exists():
-            return
-        self.meta_var.set(self._meta_text())
-        self.win.after(1000, self._refresh_meta)
 
     def open_logs(self):
         try:

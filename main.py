@@ -25,6 +25,7 @@ from pynput import keyboard
 
 import ai_client
 import config
+import theme
 from ai_client import analyze_screenshot
 from overlay import JarvisHUDOverlay
 from screen_capture import capture_active_monitor, get_active_window_title, is_wayland
@@ -100,6 +101,7 @@ def on_saved(new_cfg: dict) -> None:
     global cfg, paused
     cfg = new_cfg
     paused = bool(cfg.get("paused", False))
+    theme.set_current(cfg.get("theme", "spectra"))
     ai_client.reload_config(cfg)
     if tray is not None and tray.icon is not None:
         try:
@@ -336,6 +338,7 @@ def main():
     setup_logging()
     cfg = config.load()
     paused = bool(cfg.get("paused", False))
+    theme.set_current(cfg.get("theme", "spectra"))
     ai_client.reload_config(cfg)
 
     if is_wayland():
