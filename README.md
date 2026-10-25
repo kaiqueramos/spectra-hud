@@ -180,7 +180,7 @@ Every scan sends a JPEG of the **active monitor** to the endpoint you configure.
 - **No pixel redaction** yet: pause/blocklist are the current controls. Use a local model for sensitive work.
 - **Prompt injection:** text visible on screen is untrusted input to the model.
 - Some window managers may flicker or steal focus from the overlay.
-- The frameless command center is tuned for **1080p** (1060×1000) and is not in the taskbar; use the tray or `Ctrl+Alt+C` to restore it.
+- The frameless command center is tuned for **1080p** (1060×1010) and is not in the taskbar; use the tray or `Ctrl+Alt+C` to restore it.
 - No packaging/AppImage yet.
 
 ## Roadmap

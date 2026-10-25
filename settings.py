@@ -130,7 +130,7 @@ class CommandCenter:
         self.win.bind("<Button-1>", self._force_x_focus, add="+")
 
         mon = self._target_monitor()
-        w, h = 1060, 1000
+        w, h = 1060, 1010
         x = mon["left"] + max(10, (mon["width"] - w) // 2)
         y = mon["top"] + max(10, (mon["height"] - h) // 2)
         self.win.geometry(f"{w}x{h}+{x}+{y}")
