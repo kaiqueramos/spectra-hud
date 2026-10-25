@@ -77,7 +77,7 @@ Download the `.deb` from [Releases](https://github.com/kaiqueramos/spectra-hud/r
 sudo apt install ./spectra-hud_0.2.1_all.deb
 ```
 
-The package creates a Python venv at `/opt/spectra-hud/.venv` and downloads its Python dependencies during install, so it needs internet once. It registers the `spectra-hud` command and a desktop entry.
+The package creates a Python venv at `/opt/spectra-hud/.venv` and downloads its Python dependencies during install, so it needs internet once. It registers the `spectra-hud` command and a desktop entry. Check `SHA256SUMS` in the release.
 
 ### Tarball
 
