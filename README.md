@@ -42,7 +42,7 @@ No server, no telemetry. The screenshot goes only to the endpoint **you** config
 - Session memory with sliding TTL (1 h).
 - Multi-monitor aware (X11).
 - Bring your own key: any OpenAI-compatible vision model.
-- 40 unit tests.
+- 41 unit tests.
 
 ## Requirements
 
@@ -84,7 +84,7 @@ python3 main.py
 |---|---|---|---|
 | `SPECTRA_API_KEY` | yes | — | Provider key |
 | `SPECTRA_BASE_URL` | no | `https://opencode.ai/zen/go/v1` | OpenAI-compatible base URL |
-| `SPECTRA_MODEL` | no | `deepseek-v4-flash-vision-exp` | Vision model |
+| `SPECTRA_MODEL` | no | `deepseek-v4.1-flash` | Vision model (provider-specific ID) |
 | `SPECTRA_HOTKEY` | no | `<ctrl>+<alt>+<space>` | Scan hotkey (pynput syntax) |
 | `SPECTRA_HOTKEY_BAR` | no | `<ctrl>+<shift>+<space>` | Command bar hotkey |
 

@@ -12,7 +12,7 @@ First public release.
 - Multi-monitor capture on X11.
 - Bring-your-own-key configuration via `.env` or environment variables.
 - Apache 2.0 license.
-- 40 unit tests.
+- 41 unit tests.
 - Fail-fast on Wayland with a clear message.
 - Single-instance lock.
 - Thread-safe follow-up results (no Tk calls from worker threads).

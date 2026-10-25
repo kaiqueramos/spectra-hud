@@ -45,7 +45,7 @@ API_KEY = _setting("SPECTRA_API_KEY", "OPENCODE_GO_API_KEY")
 BASE_URL = _setting(
     "SPECTRA_BASE_URL", "OPENCODE_GO_BASE_URL", "https://opencode.ai/zen/go/v1"
 ).rstrip("/")
-MODEL_NAME = _setting("SPECTRA_MODEL", "MODEL_NAME", "deepseek-v4-flash-vision-exp")
+MODEL_NAME = _setting("SPECTRA_MODEL", "MODEL_NAME", "deepseek-v4.1-flash")
 
 DEMO = os.environ.get("SPECTRA_DEMO", "").strip().lower() in ("1", "true", "yes")
 
