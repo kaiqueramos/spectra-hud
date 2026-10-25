@@ -75,12 +75,19 @@ def encode_image_to_base64(image: Image.Image, max_dim: int = 1600) -> str:
     return base64.b64encode(buffered.getvalue()).decode("utf-8")
 
 
+def strip_markdown(text: str) -> str:
+    """Remove marcação leve para o card ler como texto puro."""
+    text = text.replace("**", "").replace("__", "").replace("`", "")
+    text = re.sub(r"^\s*[-*]\s+", "", text, flags=re.MULTILINE)
+    return text
+
+
 def clean_output_text(text: str) -> str:
     if not text:
         return ""
     text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
     text = re.sub(r"```json.*?```", "", text, flags=re.DOTALL)
-    return text.strip()
+    return strip_markdown(text).strip()
 
 
 def extract_json_payload(text: str) -> dict:
@@ -126,7 +133,7 @@ def sanitize_insights(raw) -> list[dict]:
     for item in raw:
         if not isinstance(item, dict):
             continue
-        text = str(item.get("insight") or "").strip()[:MAX_INSIGHT_CHARS]
+        text = strip_markdown(str(item.get("insight") or "").strip())[:MAX_INSIGHT_CHARS]
         if not text:
             continue
         kind = str(item.get("kind") or "").strip().lower()
@@ -134,7 +141,7 @@ def sanitize_insights(raw) -> list[dict]:
             {
                 "box_2d": normalize_box(item.get("box_2d")),
                 "kind": kind if kind in VALID_KINDS else "info",
-                "label": str(item.get("label") or "PONTO DE ATENÇÃO").strip()[:60],
+                "label": strip_markdown(str(item.get("label") or "PONTO DE ATENÇÃO").strip())[:60],
                 "insight": text,
             }
         )

@@ -19,6 +19,12 @@ def test_clean_output_text_removes_think_tags():
     assert ai_client.clean_output_text(raw_3) == "Resposta final."
 
 
+def test_strip_markdown_from_cards_and_answers():
+    assert ai_client.strip_markdown("Clique em **Cancel** e `commit`.") == "Clique em Cancel e commit."
+    out = ai_client.sanitize_insights([{"insight": "Use **X** e `Y`."}])
+    assert out[0]["insight"] == "Use X e Y."
+
+
 def test_extract_json_payload_formats():
     text_md = """
     Aqui está a análise:
