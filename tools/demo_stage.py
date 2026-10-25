@@ -6,6 +6,11 @@ Não faz parte do produto: é uma tela falsa e limpa para gravar o vídeo do her
 
 import tkinter as tk
 
+try:
+    from pynput import keyboard as pynput_keyboard
+except Exception:  # dependência opcional: o ✕ e o clique direito continuam funcionando
+    pynput_keyboard = None
+
 W, H = 1920, 1080
 BG = "#0b0e0b"
 PANEL = "#0e120e"
@@ -89,9 +94,7 @@ lines = [
 y = 180
 for number, code, color in lines:
     if number == "42":
-        canvas.create_rectangle(
-            wx0 + 1, y - 5, wx1 - 1, y + 25, fill="#1a0f09", outline=""
-        )
+        canvas.create_rectangle(wx0 + 1, y - 5, wx1 - 1, y + 25, fill="#1a0f09", outline="")
     canvas.create_text(
         wx0 + 24,
         y,
@@ -100,9 +103,7 @@ for number, code, color in lines:
         font=("DejaVu Sans Mono", 12),
         anchor="w",
     )
-    canvas.create_text(
-        wx0 + 64, y, text=code, fill=color, font=("DejaVu Sans Mono", 13), anchor="w"
-    )
+    canvas.create_text(wx0 + 64, y, text=code, fill=color, font=("DejaVu Sans Mono", 13), anchor="w")
     y += 30
 
 # diálogo
@@ -134,9 +135,7 @@ canvas.create_text(
     anchor="center",
 )
 canvas.create_rectangle(1550, 880, 1630, 920, fill=PANEL, outline="#394134")
-canvas.create_text(
-    1590, 900, text="Cancel", fill=DIM, font=("DejaVu Sans", 13), anchor="center"
-)
+canvas.create_text(1590, 900, text="Cancel", fill=DIM, font=("DejaVu Sans", 13), anchor="center")
 
 # fila
 qx0, qy0, qx1, qy1 = 80, 760, 700, 980
@@ -149,12 +148,8 @@ rows = [
 ]
 ry = 812
 for ident, action, color in rows:
-    canvas.create_text(
-        qx0 + 24, ry, text=ident, fill=color, font=("DejaVu Sans Mono", 11), anchor="w"
-    )
-    canvas.create_text(
-        qx1 - 24, ry, text=action, fill=color, font=("DejaVu Sans Mono", 11), anchor="e"
-    )
+    canvas.create_text(qx0 + 24, ry, text=ident, fill=color, font=("DejaVu Sans Mono", 11), anchor="w")
+    canvas.create_text(qx1 - 24, ry, text=action, fill=color, font=("DejaVu Sans Mono", 11), anchor="e")
     canvas.create_line(qx0 + 16, ry + 18, qx1 - 16, ry + 18, fill="#1b211a")
     ry += 38
 
@@ -166,5 +161,85 @@ canvas.create_text(
     font=("DejaVu Sans Mono", 9),
     anchor="w",
 )
+
+
+# ---------------------------------------------------------------- fechar
+# A janela é fullscreen e sem moldura (para a gravação). Sem estes atalhos
+# não há como fechá-la pelo gerenciador de janelas.
+def close_stage(_event=None):
+    global key_listener
+    if key_listener is not None:
+        try:
+            key_listener.stop()
+        except Exception:
+            pass
+        key_listener = None
+    root.destroy()
+
+
+def reveal_close(show: bool):
+    canvas.itemconfigure("stage-close", state="normal" if show else "hidden")
+
+
+def near_close(event):
+    return event.x > W - 240 and event.y > H - 90
+
+
+def on_motion(event):
+    if near_close(event):
+        reveal_close(True)
+
+
+def on_click(event):
+    if near_close(event):
+        close_stage()
+
+
+root.bind("<Escape>", close_stage)
+root.bind("q", close_stage)
+root.bind("Q", close_stage)
+root.bind("<Button-3>", close_stage)  # clique direito também fecha
+canvas.bind("<Motion>", on_motion)
+canvas.bind("<Button-1>", on_click)
+# Janela override-redirect não recebe foco do WM; força o foco para os atalhos.
+root.after(120, root.focus_force)
+root.after(180, lambda: canvas.focus_set())
+
+canvas.create_text(
+    W - 48,
+    H - 24,
+    text="FECHAR",
+    fill=DIM,
+    font=("DejaVu Sans Mono", 9),
+    anchor="e",
+    tags="stage-close",
+)
+canvas.create_text(
+    W - 24,
+    H - 24,
+    text="✕",
+    fill=SIGNAL,
+    font=("DejaVu Sans Mono", 12, "bold"),
+    anchor="e",
+    tags="stage-close",
+)
+root.after(4500, lambda: reveal_close(False))
+print("Palco ativo. Feche no ✕ do canto inferior direito ou com clique direito.")
+
+key_listener = None
+if pynput_keyboard is not None:
+    def on_global_key(key):
+        if key == pynput_keyboard.Key.esc:
+            root.after(0, close_stage)
+            return False
+        char = getattr(key, "char", None)
+        if char in ("q", "Q"):
+            root.after(0, close_stage)
+            return False
+        return None
+
+    key_listener = pynput_keyboard.Listener(on_key=on_global_key)
+    key_listener.daemon = True
+    key_listener.start()
 
 root.mainloop()
