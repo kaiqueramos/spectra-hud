@@ -6,7 +6,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Platform: Linux X11](https://img.shields.io/badge/platform-Linux%20%7C%20X11-lightgrey.svg)](#requirements)
 
-**Status: v0.2 — experimental.** Linux + X11 only. Bring your own API key. Interface in PT-BR, English or Spanish; model responses follow the UI language.
+**Status: v0.2.1 — experimental.** Linux + X11 only. Bring your own API key. Interface in PT-BR, English or Spanish; model responses follow the UI language.
 
 [**Website**](https://kaiqueramos.github.io/spectra-hud/) · [**GitHub**](https://github.com/kaiqueramos/spectra-hud) · [**Privacy**](PRIVACY.md) · [**LGPD**](docs/LGPD.md)
 

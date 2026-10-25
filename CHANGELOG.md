@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.1 — 2026-10-25
+
+Security patch.
+
+- Pillow 13.0.0 (fixes image-decoding CVEs and resource-exhaustion issues).
+- Remotion toolchain forces zod 4.6.7; `npm audit` reports 0 vulnerabilities.
+- No API keys or secrets in the repository, history, logs or shell history.
+
 ## 0.2.0 — 2026-10-25
 
 Command center polish.
