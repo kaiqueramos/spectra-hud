@@ -214,7 +214,7 @@ The site ships an **18 s hero loop** and a **24 s launch film**. Both are built 
 - `video/src/Launch.tsx` — 24 s, 1920×1080, 30 fps, original electronic soundtrack: code, game and ops use cases.
 - `video/src/brand.tsx` — shared HUD mock, cards, grid, type and motion components.
 - `docs/hero.mp4` / `docs/hero.webm` / `docs/hero-poster.jpg` — hero loop and poster.
-- `docs/launch.mp4` / `docs/launch-poster.jpg` / `docs/launch-en.vtt` — 24 s direct cut, poster and captions.
+- `docs/launch-24s.mp4` / `docs/launch-24s-poster.jpg` / `docs/launch-24s-en.vtt` — 24 s direct cut, poster and captions.
 - `video/public/launch-audio.mp3` — original generated soundtrack, no licensed samples.
 
 ```bash
@@ -222,7 +222,7 @@ cd video
 npm install
 npx remotion render src/index.ts Hero ../docs/hero.mp4 --codec=h264 --crf=21 --pixel-format=yuv420p
 npx remotion render src/index.ts Hero ../docs/hero.webm --codec=vp9 --crf=32 --pixel-format=yuv420p
-npx remotion render src/index.ts Launch ../docs/launch.mp4 --codec=h264 --crf=21 --pixel-format=yuv420p --audio-codec=aac --audio-bitrate=192k
+npx remotion render src/index.ts Launch ../docs/launch-24s.mp4 --codec=h264 --crf=21 --pixel-format=yuv420p --audio-codec=aac --audio-bitrate=192k
 ```
 
 ## Development
