@@ -1117,3 +1117,32 @@ kbd {
   }
   .scanline, .reticle, .cursor { display: none !important; }
 }
+
+/* ---------- launch film ---------- */
+.film-section { padding-top: clamp(72px, 8vw, 112px); }
+.film-wrap {
+  border: 1px solid var(--line);
+  background: var(--panel-2);
+  padding: 10px;
+  box-shadow: 14px 14px 0 #040604;
+}
+.film-video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000;
+}
+.film-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 4px 3px;
+  color: var(--dim);
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+@media (max-width: 720px) {
+  .film-wrap { padding: 5px; box-shadow: 7px 7px 0 #040604; }
+  .film-meta { flex-wrap: wrap; gap: 4px 14px; font-size: 8px; }
+}

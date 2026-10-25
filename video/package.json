@@ -3,7 +3,9 @@
   "private": true,
   "scripts": {
     "dev": "remotion studio src/index.ts",
-    "render": "remotion render src/index.ts Hero out/hero.mp4 --codec=h264"
+    "render:hero": "remotion render src/index.ts Hero out/hero.mp4 --codec=h264",
+    "render:hero:webm": "remotion render src/index.ts Hero out/hero.webm --codec=vp9",
+    "render:launch": "remotion render src/index.ts Launch out/launch.mp4 --codec=h264 --audio-codec=aac"
   },
   "dependencies": {
     "@remotion/cli": "^4.0.0",

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- New 18 s hero loop and 40 s launch film built in Remotion, with real command center captures, kinetic type and an original soundtrack.
+- Site: launch film section with captions, new hero video/poster and updated social card.
+
 ## 0.2.1 — 2026-10-25
 
 Security patch.

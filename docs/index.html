@@ -41,6 +41,7 @@
 
       <nav class="nav-links" aria-label="Primary">
         <a href="#how">How it works</a>
+        <a href="#film">Film</a>
         <a href="#features">Features</a>
         <a href="#hotkeys">Hotkeys</a>
         <a href="#privacy">Privacy</a>
@@ -70,6 +71,7 @@
 
         <div class="cta-row">
           <a class="btn btn-primary" href="#install">Install v0.2.1</a>
+          <a class="btn btn-ghost" href="#film">Watch the film <span aria-hidden="true">▶</span></a>
           <a class="btn btn-ghost" href="https://github.com/kaiqueramos/spectra-hud">Read the source</a>
         </div>
 
@@ -82,7 +84,7 @@
             <span class="led" aria-hidden="true"></span>
             <span class="mono">DISPLAY 1</span>
             <span class="mono muted">1920 × 1080</span>
-            <span class="mono push">DEMO / 20S</span>
+            <span class="mono push">HERO / 18S</span>
           </div>
 
           <div class="screen screen-video">
@@ -101,7 +103,7 @@
             </video>
           </div>
         </div>
-        <p class="demo-caption"><span class="mono">FIG. 01</span> 20s demo. Cards are placed against the element, never on top of it.</p>
+        <p class="demo-caption"><span class="mono">FIG. 01</span> 18s hero. Cards are placed against the element, never on top of it.</p>
       </div>
     </section>
 
@@ -112,6 +114,27 @@
         <div class="spec"><span class="mono dim">MODEL</span><strong>Vision, any provider</strong><span>OpenAI-compatible</span></div>
         <div class="spec"><span class="mono dim">MEMORY</span><strong>1 hour, sliding</strong><span>10 events, then gone</span></div>
         <div class="spec"><span class="mono dim">LICENSE</span><strong>Apache 2.0</strong><span>fork it, ship it</span></div>
+      </div>
+    </section>
+
+    <!-- LAUNCH FILM -->
+    <section class="section film-section" id="film">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-index mono">FILM</span>
+          <h2>Forty seconds.<br>One screen.</h2>
+        </div>
+        <div class="film-wrap">
+          <video class="film-video" controls preload="none" playsinline poster="./launch-poster.jpg">
+            <source src="./launch.mp4" type="video/mp4">
+            <track kind="captions" src="./launch-en.vtt" srclang="en" label="English" default>
+          </video>
+          <div class="film-meta mono">
+            <span>LAUNCH FILM / 40S</span>
+            <span>1080P / AUDIO</span>
+            <span>v0.2.1</span>
+          </div>
+        </div>
       </div>
     </section>
 

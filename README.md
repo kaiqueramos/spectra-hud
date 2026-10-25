@@ -206,18 +206,23 @@ For screenshots and videos, demo mode renders canned cards and a canned follow-u
 SPECTRA_DEMO=1 ./run.sh
 ```
 
-## Demo video
+## Videos
 
-The hero video on the site is rendered from a real recording of the app running in demo mode.
+The site ships an **18 s hero loop** and a **40 s launch film**. Both are built in Remotion, use the real command center captures (`video/public/command-center-*.png`) and the Spectra type system.
 
-- `tools/demo_stage.py` — staged 1920×1080 X11 screen used for the recording.
-- `video/` — Remotion composition (`Hero`, 1920×1080, 30 fps, 20 s).
-- `docs/hero.mp4` / `docs/hero.webm` — rendered output.
+- `video/src/Hero.tsx` — 18 s, 1920×1080, 30 fps, silent loop.
+- `video/src/Launch.tsx` — 40 s, 1920×1080, 30 fps, original electronic soundtrack.
+- `video/src/brand.tsx` — shared HUD mock, cards, grid, type and motion components.
+- `docs/hero.mp4` / `docs/hero.webm` / `docs/hero-poster.jpg` — hero loop and poster.
+- `docs/launch.mp4` / `docs/launch-poster.jpg` / `docs/launch-en.vtt` — launch film, poster and captions.
+- `video/public/launch-audio.mp3` — original generated soundtrack, no licensed samples.
 
 ```bash
 cd video
 npm install
-npx remotion render src/index.ts Hero out/hero.mp4 --codec=h264
+npx remotion render src/index.ts Hero ../docs/hero.mp4 --codec=h264 --crf=21 --pixel-format=yuv420p
+npx remotion render src/index.ts Hero ../docs/hero.webm --codec=vp9 --crf=32 --pixel-format=yuv420p
+npx remotion render src/index.ts Launch ../docs/launch.mp4 --codec=h264 --crf=21 --pixel-format=yuv420p --audio-codec=aac --audio-bitrate=192k
 ```
 
 ## Development
