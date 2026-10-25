@@ -84,11 +84,14 @@ const Manifesto: React.FC = () => {
   return (
     <AbsoluteFill style={{ background: INK }}>
       <Grid opacity={0.2} />
+      <div style={{ position: "absolute", left: 118, top: 108 }}>
+        <Kicker>INTRODUCING SPECTRA HUD</Kicker>
+      </div>
       <div
         style={{
           position: "absolute",
           left: 110,
-          top: 160,
+          top: 180,
           fontFamily: COND,
           fontSize: 154,
           lineHeight: 0.88,
