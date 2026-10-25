@@ -9,12 +9,14 @@ import json
 import uuid
 import base64
 import re
+import time
 import urllib.request
 import urllib.error
 from pathlib import Path
 from PIL import Image
 import io
 
+import demo
 from session_memory import session
 
 ENV_PATH = Path(__file__).resolve().parent / ".env"
@@ -45,12 +47,15 @@ BASE_URL = _setting(
 ).rstrip("/")
 MODEL_NAME = _setting("SPECTRA_MODEL", "MODEL_NAME", "deepseek-v4-flash-vision-exp")
 
+DEMO = os.environ.get("SPECTRA_DEMO", "").strip().lower() in ("1", "true", "yes")
+
 PROMPT_FILE = Path(__file__).resolve().parent / "prompt_system.md"
 
 ERROR_CONTEXT = "Erro"
 LAST_ERROR = ""  # Último erro de análise/consulta, para o HUD exibir.
 VALID_KINDS = ("alerta", "acao", "item", "info")
 MAX_INSIGHTS = 3  # Alt+1..3 só alcançam 3 cards.
+MAX_INSIGHT_CHARS = 420
 
 
 def get_system_prompt() -> str:
@@ -121,7 +126,7 @@ def sanitize_insights(raw) -> list[dict]:
     for item in raw:
         if not isinstance(item, dict):
             continue
-        text = str(item.get("insight") or "").strip()
+        text = str(item.get("insight") or "").strip()[:MAX_INSIGHT_CHARS]
         if not text:
             continue
         kind = str(item.get("kind") or "").strip().lower()
@@ -129,7 +134,7 @@ def sanitize_insights(raw) -> list[dict]:
             {
                 "box_2d": normalize_box(item.get("box_2d")),
                 "kind": kind if kind in VALID_KINDS else "info",
-                "label": str(item.get("label") or "PONTO DE ATENÇÃO").strip(),
+                "label": str(item.get("label") or "PONTO DE ATENÇÃO").strip()[:60],
                 "insight": text,
             }
         )
@@ -140,6 +145,11 @@ def sanitize_insights(raw) -> list[dict]:
 
 def analyze_screenshot(image: Image.Image) -> tuple[str, list[dict]]:
     global LAST_ERROR
+    if DEMO:
+        time.sleep(1.1)
+        session.record_scan(demo.CONTEXT, demo.INSIGHTS)
+        return demo.CONTEXT, demo.INSIGHTS
+
     session.touch()
     b64_img = encode_image_to_base64(image)
     system_prompt = get_system_prompt()
@@ -225,6 +235,13 @@ def ask_followup(
     image: Image.Image, context_insight: dict | None, question: str
 ) -> str:
     session.touch()
+    target_label = context_insight.get("label", "Geral") if context_insight else "Geral"
+
+    if DEMO:
+        time.sleep(0.8)
+        session.record_interaction(question, demo.ANSWER, target_label)
+        return demo.ANSWER
+
     b64_img = encode_image_to_base64(image)
     memory_summary = session.get_context_summary()
 
@@ -311,4 +328,7 @@ def ask_followup(
             session.record_interaction(question, content, target_label)
             return content
     except Exception as e:
-        return f"Erro na consulta: {e}"
+        global LAST_ERROR
+        LAST_ERROR = str(e)
+        print(f"[Erro de Consulta] {e}")
+        return "Erro na consulta. Tente de novo."

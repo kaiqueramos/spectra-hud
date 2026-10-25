@@ -15,13 +15,13 @@ If you use the default endpoint, read the provider's terms. If you point `SPECTR
 ## What is stored locally
 
 - `.env` — your API key and settings (plaintext in v0.1).
-- `.session_cache.json` — up to 10 recent events: detected context, card labels, insights, questions and answers. Text only, no images. Expires after 1 hour of inactivity.
+- `~/.local/state/spectra-hud/session.json` — up to 10 recent events: detected context, card labels, insights, questions and answers. Text only, no images. Mode 600. Expires after 1 hour of inactivity.
 - No logs are written by default; console output only.
 
 ## How to remove local data
 
 ```bash
-rm .session_cache.json
+rm ~/.local/state/spectra-hud/session.json
 ```
 
 To revoke access, delete or rotate the key at your provider and remove `.env`.

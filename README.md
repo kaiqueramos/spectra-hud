@@ -22,7 +22,7 @@
 
 Most AI assistants wait for you to type. Spectra reads the screen and answers **in place**: a tactical overlay for games, IDEs, dashboards and anything where context is visual.
 
-Press `Ctrl+Space` → Spectra captures the active monitor, asks a vision model what matters, and draws small cards anchored to the relevant UI elements. Click a card to ask a follow-up; drag it anywhere.
+Press `Ctrl+Alt+Space` → Spectra captures the active monitor, asks a vision model what matters, and draws small cards anchored to the relevant UI elements. Click a card to ask a follow-up; drag it anywhere.
 
 ## How it works
 
@@ -42,7 +42,7 @@ No server, no telemetry. The screenshot goes only to the endpoint **you** config
 - Session memory with sliding TTL (1 h).
 - Multi-monitor aware (X11).
 - Bring your own key: any OpenAI-compatible vision model.
-- 36 unit tests.
+- 40 unit tests.
 
 ## Requirements
 
@@ -85,18 +85,18 @@ python3 main.py
 | `SPECTRA_API_KEY` | yes | — | Provider key |
 | `SPECTRA_BASE_URL` | no | `https://opencode.ai/zen/go/v1` | OpenAI-compatible base URL |
 | `SPECTRA_MODEL` | no | `deepseek-v4-flash-vision-exp` | Vision model |
-| `SPECTRA_HOTKEY` | no | `<ctrl>+<space>` | Scan hotkey (pynput syntax) |
+| `SPECTRA_HOTKEY` | no | `<ctrl>+<alt>+<space>` | Scan hotkey (pynput syntax) |
 | `SPECTRA_HOTKEY_BAR` | no | `<ctrl>+<shift>+<space>` | Command bar hotkey |
 
 Environment variables override `.env`. Legacy names (`OPENCODE_GO_API_KEY`, `OPENCODE_GO_BASE_URL`, `MODEL_NAME`) still work.
 
-**Hotkey conflict:** `Ctrl+Space` is the autocomplete shortcut in VS Code and JetBrains IDEs. If you use Spectra while coding, set `SPECTRA_HOTKEY=<ctrl>+<alt>+<space>`.
+**Hotkey note:** the default is `Ctrl+Alt+Space` because `Ctrl+Space` is the autocomplete shortcut in VS Code and JetBrains IDEs. You can change it with `SPECTRA_HOTKEY`.
 
 ## Hotkeys
 
 | Key | Action |
 |---|---|
-| `Ctrl+Space` | Scan screen / close HUD |
+| `Ctrl+Alt+Space` | Scan screen / close HUD |
 | `Ctrl+Shift+Space` | Global command bar |
 | `Alt+1..3` | Open the question box for card 1..3 |
 | `Esc` | Close the active prompt |
@@ -128,6 +128,28 @@ Every scan sends a JPEG of the **active monitor** to the endpoint you configure.
 - [ ] English prompt / i18n
 - [ ] Cost guard and request debounce
 - [ ] Integration tests for the overlay
+
+## Demo mode
+
+For screenshots and videos, demo mode renders canned cards and a canned follow-up without calling a model:
+
+```bash
+SPECTRA_DEMO=1 ./run.sh
+```
+
+## Demo video
+
+The hero video on the site is rendered from a real recording of the app running in demo mode.
+
+- `tools/demo_stage.py` — staged 1920×1080 X11 screen used for the recording.
+- `video/` — Remotion composition (`Hero`, 1920×1080, 30 fps, 20 s).
+- `docs/hero.mp4` / `docs/hero.webm` — rendered output.
+
+```bash
+cd video
+npm install
+npx remotion render src/index.ts Hero out/hero.mp4 --codec=h264
+```
 
 ## Development
 

@@ -20,7 +20,7 @@ Spectra is a local desktop app that sends screenshots to a third-party model end
 
 - **API key:** stored in `.env` in plaintext in v0.1. It is read at startup and sent only to `SPECTRA_BASE_URL`. Never commit `.env`; if a key leaks, revoke it at the provider immediately.
 - **Screenshots:** the full active monitor is captured and sent to the configured endpoint. There is no redaction in v0.1. Treat the provider as a data processor and avoid sensitive screens.
-- **Local state:** `.session_cache.json` stores the last 10 text events for up to one hour. It is not encrypted.
+- **Local state:** `~/.local/state/spectra-hud/session.json` stores the last 10 text events for up to one hour, mode 600. It is not encrypted.
 - **Prompt injection:** any text visible on screen can influence the model's output. The app only displays text; it does not execute commands or call tools.
 - **Transport:** HTTPS is verified by Python's default SSL context. A custom `SPECTRA_BASE_URL` can point anywhere, including a malicious host — only use endpoints you trust.
 

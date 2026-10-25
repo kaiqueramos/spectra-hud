@@ -48,6 +48,11 @@ def test_extract_json_payload_formats():
     assert ai_client.extract_json_payload("Apenas texto puro sem json") == {}
 
 
+def test_sanitize_insights_truncates_long_text():
+    out = ai_client.sanitize_insights([{"insight": "x" * 1000}])
+    assert len(out[0]["insight"]) == ai_client.MAX_INSIGHT_CHARS
+
+
 def test_encode_image_to_base64():
     img = Image.new("RGB", (3000, 2000), color="blue")
     b64 = ai_client.encode_image_to_base64(img, max_dim=1000)

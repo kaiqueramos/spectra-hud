@@ -84,45 +84,6 @@
     }
   }
 
-  /* ---------- hero demo: reticle cycle ---------- */
-  const screen = document.querySelector("[data-screen]");
-  const reticle = document.querySelector("[data-reticle]");
-  const targets = [...document.querySelectorAll("[data-target]")].filter(
-    (el) => el.offsetParent !== null
-  );
-
-  if (screen && reticle && targets.length && !reduce) {
-    let index = 0;
-    let timer = null;
-
-    const move = () => {
-      const t = targets[index % targets.length];
-      const a = t.getBoundingClientRect();
-      const b = screen.getBoundingClientRect();
-      const x = a.left - b.left + a.width / 2;
-      const y = a.top - b.top + a.height / 2;
-      reticle.style.transform = `translate3d(calc(${x}px - 50%), calc(${y}px - 50%), 0)`;
-      reticle.classList.add("is-live");
-      index += 1;
-    };
-
-    const start = () => {
-      if (timer) return;
-      move();
-      timer = window.setInterval(move, 2800);
-    };
-    const stop = () => {
-      window.clearInterval(timer);
-      timer = null;
-    };
-
-    window.setTimeout(start, 1500);
-    document.addEventListener("visibilitychange", () => {
-      if (document.hidden) stop();
-      else start();
-    });
-  }
-
   /* ---------- cursor reticle ---------- */
   const cursor = document.querySelector(".cursor");
   const coord = document.querySelector("[data-coord]");
@@ -157,6 +118,13 @@
       cancelAnimationFrame(raf);
       raf = null;
     });
+  }
+
+  /* ---------- reduced motion: keep the hero video still ---------- */
+  const heroVideo = document.querySelector(".hero-video");
+  if (heroVideo && reduce) {
+    heroVideo.removeAttribute("autoplay");
+    heroVideo.pause();
   }
 
   /* ---------- copy install command ---------- */

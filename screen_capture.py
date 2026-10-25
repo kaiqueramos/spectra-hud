@@ -1,46 +1,72 @@
 """
-Módulo de captura de tela rápida usando mss e detecção do monitor sob o cursor do mouse.
+Captura de tela e posição do mouse no X11.
+
+Ordem de resolução do mouse: xdotool (com timeout) e, se falhar, Xlib.
+Nenhuma das duas existe no Wayland puro: o app deve falhar antes com uma
+mensagem clara (ver `is_wayland`).
 """
 
+import os
 import subprocess
+
 import mss
 from PIL import Image
+from Xlib import display as xdisplay
 
 
-def get_mouse_position() -> tuple[int, int]:
-    """Obtém as coordenadas X, Y do cursor do mouse via xdotool."""
+def is_wayland() -> bool:
+    """True quando a sessão é Wayland (não suportado na v0.1)."""
+    return os.environ.get("XDG_SESSION_TYPE", "").lower() == "wayland" or bool(
+        os.environ.get("WAYLAND_DISPLAY")
+    )
+
+
+def get_mouse_position() -> tuple[int, int] | None:
+    """Posição global do cursor. None se nenhum backend conseguir responder."""
     try:
-        out = subprocess.check_output(["xdotool", "getmouselocation"], text=True)
-        # Formato: x:1234 y:567 screen:0 window:12345
+        out = subprocess.run(
+            ["xdotool", "getmouselocation"],
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=True,
+        ).stdout
         parts = dict(p.split(":", 1) for p in out.strip().split() if ":" in p)
         return int(parts["x"]), int(parts["y"])
     except Exception:
-        return (0, 0)
+        pass
+
+    try:
+        d = xdisplay.Display()
+        try:
+            pointer = d.screen().root.query_pointer()
+            return pointer.root_x, pointer.root_y
+        finally:
+            d.close()
+    except Exception:
+        return None
 
 
 def capture_active_monitor() -> tuple[Image.Image, dict]:
-    """
-    Captura o monitor onde o cursor do mouse está localizado no momento.
-    Retorna a imagem PIL e os dados do monitor (top, left, width, height).
-    """
-    mx, my = get_mouse_position()
+    """Captura o monitor sob o cursor (ou o primário, se não houver mouse)."""
+    position = get_mouse_position()
+    mx, my = position if position else (None, None)
 
     with mss.mss() as sct:
-        # monitors[0] é a tela combinada. Os monitores individuais são de 1 em diante.
+        monitors = sct.monitors[1:] or [sct.monitors[0]]
         selected_monitor = None
-        for m in sct.monitors[1:]:
-            left, top = m["left"], m["top"]
-            right = left + m["width"]
-            bottom = top + m["height"]
-            if left <= mx < right and top <= my < bottom:
-                selected_monitor = m
-                break
+
+        if mx is not None and my is not None:
+            for monitor in monitors:
+                left, top = monitor["left"], monitor["top"]
+                right = left + monitor["width"]
+                bottom = top + monitor["height"]
+                if left <= mx < right and top <= my < bottom:
+                    selected_monitor = monitor
+                    break
 
         if not selected_monitor:
-            # Fallback para o monitor primário se o cursor estiver fora
-            selected_monitor = (
-                sct.monitors[1] if len(sct.monitors) > 1 else sct.monitors[0]
-            )
+            selected_monitor = monitors[0]
 
         shot = sct.grab(selected_monitor)
         img = Image.frombytes("RGB", shot.size, shot.bgra, "raw", "BGRX")

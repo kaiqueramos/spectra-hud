@@ -26,3 +26,8 @@ build/
 # mídia gerada
 recordings/
 *.log
+
+# remotion
+video/node_modules/
+video/out/
+.remotion/

@@ -76,6 +76,20 @@ def test_session_memory_sliding_renewal_near_expiry():
         assert abs(time.time() - sm.last_activity_time) < 2
 
 
+def test_summary_read_does_not_renew_ttl():
+    with tempfile.TemporaryDirectory() as tmpdir:
+        sm = SessionMemory(ttl_seconds=3600)
+        sm.storage_file = Path(tmpdir) / "test_session.json"
+        sm.history.clear()
+
+        sm.record_interaction("Pergunta", "Resposta", "Alvo")
+        stale = time.time() - 120
+        sm.last_activity_time = stale
+        sm.get_context_summary()
+
+        assert sm.last_activity_time == stale
+
+
 def test_session_memory_persistence():
     with tempfile.TemporaryDirectory() as tmpdir:
         storage = Path(tmpdir) / "test_session.json"

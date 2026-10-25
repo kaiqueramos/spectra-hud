@@ -70,7 +70,7 @@
           <a class="btn btn-ghost" href="https://github.com/kaiqueramos/spectra-hud">Read the source</a>
         </div>
 
-        <p class="hero-note">36 tests. No telemetry. Your key stays local.</p>
+        <p class="hero-note">40 tests. No telemetry. Your key stays local.</p>
       </div>
 
       <div class="hero-demo">
@@ -78,70 +78,27 @@
           <div class="monitor-bar">
             <span class="led" aria-hidden="true"></span>
             <span class="mono">DISPLAY 1</span>
-            <span class="mono muted">2560 × 1440</span>
-            <span class="mono push">SPECTRA / LIVE</span>
+            <span class="mono muted">1920 × 1080</span>
+            <span class="mono push">DEMO / 20S</span>
           </div>
 
-          <div class="screen" data-screen>
-            <div class="screen-dots" aria-hidden="true"></div>
-
-            <div class="win win-code">
-              <div class="win-bar"><span>payment_service.py</span><span class="muted">UTF-8</span></div>
-              <div class="code" aria-hidden="true">
-                <div class="ln"><b>38</b><span><i class="c-k">def</i> settle(payment):</span></div>
-                <div class="ln"><b>39</b><span>&nbsp;&nbsp;ledger = load(payment.id)</span></div>
-                <div class="ln"><b>40</b><span>&nbsp;&nbsp;<i class="c-k">if</i> ledger.closed:</span></div>
-                <div class="ln"><b>41</b><span>&nbsp;&nbsp;&nbsp;&nbsp;<i class="c-k">return</i> <i class="c-s">"skipped"</i></span></div>
-                <div class="ln is-error" data-target="1"><b>42</b><span>&nbsp;&nbsp;<i class="c-k">return</i> payment.user.id</span></div>
-                <div class="ln"><b>43</b><span>&nbsp;&nbsp;commit(ledger)</span></div>
-              </div>
-            </div>
-
-            <div class="win win-dialog">
-              <div class="win-bar">Confirm retry</div>
-              <p>The previous request timed out.</p>
-              <div class="dialog-actions" aria-hidden="true">
-                <span class="fake-btn">Cancel</span>
-                <span class="fake-btn primary" data-target="2">Retry</span>
-              </div>
-            </div>
-
-            <div class="win win-list">
-              <div class="win-bar">Queue</div>
-              <ul aria-hidden="true">
-                <li><span>#1042</span><span>settle</span></li>
-                <li class="is-dup" data-target="3"><span>#1043</span><span>settle</span></li>
-                <li><span>#1044</span><span>retry</span></li>
-              </ul>
-            </div>
-
-            <div class="scanline" aria-hidden="true"></div>
-            <div class="reticle" data-reticle aria-hidden="true"></div>
-
-            <article class="hud-card" data-card="1">
-              <div class="hud-card-head"><span class="tag tag-alert">ALERTA</span><span class="idx">01</span></div>
-              <p>Line 42 can be null. The build fails here.</p>
-              <div class="hud-card-foot">CLICK TO ASK</div>
-            </article>
-
-            <article class="hud-card" data-card="2">
-              <div class="hud-card-head"><span class="tag tag-action">AÇÃO</span><span class="idx">02</span></div>
-              <p>Choose Retry. The dialog keeps your draft.</p>
-              <div class="hud-card-foot">CLICK TO ASK</div>
-            </article>
-
-            <article class="hud-card" data-card="3">
-              <div class="hud-card-head"><span class="tag tag-item">ITEM</span><span class="idx">03</span></div>
-              <p>#1043 is a duplicate. Skip it.</p>
-              <div class="hud-card-foot">CLICK TO ASK</div>
-            </article>
-
-            <div class="hud-status">
-              <span>SCAN 0.8s</span><span>3 POINTS</span><span>JPEG 1600PX</span>
-            </div>
+          <div class="screen screen-video">
+            <video
+              class="hero-video"
+              poster="./hero-poster.jpg"
+              autoplay
+              muted
+              loop
+              playsinline
+              preload="metadata"
+              aria-label="Spectra HUD demo: press the hotkey, three cards appear, click one to ask a follow-up."
+            >
+              <source src="./hero.mp4" type="video/mp4">
+              <source src="./hero.webm" type="video/webm">
+            </video>
           </div>
         </div>
-        <p class="demo-caption"><span class="mono">FIG. 01</span> Cards are placed against the element, never on top of it.</p>
+        <p class="demo-caption"><span class="mono">FIG. 01</span> 20s demo. Cards are placed against the element, never on top of it.</p>
       </div>
     </section>
 
@@ -294,9 +251,9 @@ SPECTRA_MODEL=<span class="c-s">your-vision-model</span></code></pre>
           </article>
 
           <article class="cell cell-f">
-            <h3>36 tests.</h3>
+            <h3>40 tests.</h3>
             <p>Geometry, schema and parsing are covered. The overlay is tested by hand on X11.</p>
-            <div class="term-line mono" aria-hidden="true"><span class="c-g">$</span> pytest -q<br><span class="c-g">36 passed</span> in 0.40s</div>
+            <div class="term-line mono" aria-hidden="true"><span class="c-g">$</span> pytest -q<br><span class="c-g">40 passed</span> in 0.40s</div>
           </article>
         </div>
       </div>
@@ -313,7 +270,7 @@ SPECTRA_MODEL=<span class="c-s">your-vision-model</span></code></pre>
         <div class="keys-layout">
           <div class="keys-list">
             <div class="key-row">
-              <div class="keys"><kbd>Ctrl</kbd><span>+</span><kbd>Space</kbd></div>
+              <div class="keys"><kbd>Ctrl</kbd><span>+</span><kbd>Alt</kbd><span>+</span><kbd>Space</kbd></div>
               <div><strong>Scan or close</strong><span>Captures the active monitor, or clears the HUD.</span></div>
             </div>
             <div class="key-row">
@@ -336,8 +293,8 @@ SPECTRA_MODEL=<span class="c-s">your-vision-model</span></code></pre>
 
           <aside class="callout">
             <span class="mono dim">HEADS-UP</span>
-            <h3>Ctrl+Space collides with IDE autocomplete.</h3>
-            <p>VS Code and JetBrains own that shortcut. If you code with Spectra open, change it:</p>
+            <h3>Why Ctrl+Alt+Space?</h3>
+            <p>Ctrl+Space is autocomplete in VS Code and JetBrains. Spectra ships with Ctrl+Alt+Space to stay out of the way. Change it if you need:</p>
             <pre class="mini-code"><code>SPECTRA_HOTKEY=<span class="c-s">&lt;ctrl&gt;+&lt;alt&gt;+&lt;space&gt;</span></code></pre>
           </aside>
         </div>

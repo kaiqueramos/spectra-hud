@@ -8,6 +8,7 @@ Suporta:
 
 import time
 import math
+import queue
 import tkinter as tk
 import tkinter.font as tkfont
 import threading
@@ -19,10 +20,10 @@ import ai_client
 
 # Identidade visual por tipo de ponto (campo "kind" devolvido pelo modelo).
 KIND_STYLES = {
-    "alerta": {"accent": "#F87171", "border": "#DC2626", "icon": "⚠", "tag": "ALERTA"},
-    "acao": {"accent": "#34D399", "border": "#059669", "icon": "▶", "tag": "AÇÃO"},
-    "item": {"accent": "#FBBF24", "border": "#D97706", "icon": "◆", "tag": "ITEM"},
-    "info": {"accent": "#38BDF8", "border": "#0284C7", "icon": "●", "tag": "INFO"},
+    "alerta": {"accent": "#FF5A1F", "border": "#FF5A1F", "icon": "⚠", "tag": "ALERTA"},
+    "acao": {"accent": "#E9E6DC", "border": "#6F776B", "icon": "▶", "tag": "AÇÃO"},
+    "item": {"accent": "#A8B894", "border": "#5C6652", "icon": "◆", "tag": "ITEM"},
+    "info": {"accent": "#9AA3A0", "border": "#5A625C", "icon": "●", "tag": "INFO"},
 }
 
 
@@ -77,6 +78,7 @@ def box_to_pixels(
 
 def request_ewmh_focus(win):
     """Garante foco de teclado no GNOME Mutter via _NET_ACTIVE_WINDOW."""
+    d = None
     try:
         win.update_idletasks()
         xid = win.winfo_id()
@@ -96,6 +98,12 @@ def request_ewmh_focus(win):
         d.flush()
     except Exception as e:
         print(f"[EWMH Focus] {e}")
+    finally:
+        if d is not None:
+            try:
+                d.close()
+            except Exception:
+                pass
 
 
 def rects_overlap(
@@ -120,11 +128,13 @@ class CardWidget:
         index: int,
         insight: dict,
         rect: tuple[int, int, int, int],
+        monitor: dict,
         on_click_callback,
     ):
         self.parent_root = parent_root
         self.index = index
         self.insight = insight
+        self.monitor = monitor
         self.on_click_callback = on_click_callback
         self.style = get_kind_style(insight.get("kind"))
 
@@ -148,11 +158,11 @@ class CardWidget:
         # Cores: acento e borda dependem do tipo do ponto; o resto é fixo.
         self.PRIMARY_ACCENT = self.style["accent"]
         self.BORDER_COLOR = self.style["border"]
-        self.BG_DARK = "#0F172A"  # Slate 900
-        self.HEADER_BG = "#1E293B"  # Slate 800
-        self.FOOTER_BG = "#131E31"  # Slate mais escuro
-        self.TEXT_COLOR = "#F8FAFC"  # Slate 50
-        self.SUBTEXT_COLOR = "#94A3B8"  # Slate 400
+        self.BG_DARK = "#0D110D"  # Spectra panel
+        self.HEADER_BG = "#111610"  # Spectra header
+        self.FOOTER_BG = "#0A0D09"  # Spectra footer
+        self.TEXT_COLOR = "#ECE8DC"  # Bone
+        self.SUBTEXT_COLOR = "#949B8F"  # Muted
 
         self.canvas = tk.Canvas(
             self.win,
@@ -226,7 +236,7 @@ class CardWidget:
         self.canvas.create_rectangle(
             0, footer_y, self.w, self.h, fill=self.FOOTER_BG, outline=""
         )
-        self.canvas.create_line(0, footer_y, self.w, footer_y, fill="#1E293B", width=1)
+        self.canvas.create_line(0, footer_y, self.w, footer_y, fill="#242A22", width=1)
         self.canvas.create_text(
             12,
             footer_y + 11,
@@ -252,18 +262,27 @@ class CardWidget:
 
         if abs(new_x - self.x) > 4 or abs(new_y - self.y) > 4:
             self.has_dragged = True
-            self.x = new_x
-            self.y = new_y
-            self.win.geometry(f"+{new_x}+{new_y}")
+            mon_x = self.monitor.get("left", 0)
+            mon_y = self.monitor.get("top", 0)
+            mon_w = self.monitor.get("width", 1920)
+            mon_h = self.monitor.get("height", 1080)
+            self.x = max(mon_x, min(new_x, mon_x + mon_w - self.w))
+            self.y = max(mon_y, min(new_y, mon_y + mon_h - self.h))
+            self.win.geometry(f"+{self.x}+{self.y}")
 
     def on_release(self, event):
         if not self.has_dragged:
             self.on_click_callback(self.index)
 
     def update_insight(self, new_text: str):
+        new_text = new_text[: ai_client.MAX_INSIGHT_CHARS]
         self.insight["insight"] = new_text
         approx_lines = max(3, len(new_text) // 38 + 3)
         new_h = approx_lines * 20 + 60
+        mon_y = self.monitor.get("top", 0)
+        mon_h = self.monitor.get("height", 1080)
+        new_h = min(new_h, max(120, mon_h - 40))
+        self.y = max(mon_y + 10, min(self.y, mon_y + mon_h - new_h - 10))
         self.h = new_h
         self.win.geometry(f"{self.w}x{new_h}+{self.x}+{self.y}")
         self.canvas.config(height=new_h)
@@ -390,7 +409,7 @@ class ElementHighlight:
             badge,
             text=str(index),
             bg=accent,
-            fg="#0F172A",
+            fg="#080A08",
             font=("DejaVu Sans", 9, "bold"),
             cursor="hand2",
         )
@@ -411,7 +430,7 @@ class ScanIndicator:
     """Pílula no topo do monitor: 'escaneando' pulsando com cronômetro, ou mensagem curta (erro/aviso)."""
 
     H = 34
-    BG = "#0F172A"
+    BG = "#0D110D"
 
     def __init__(self, parent_root):
         self.root = parent_root
@@ -465,7 +484,7 @@ class ScanIndicator:
             cy,
             text=text,
             font=("DejaVu Sans", 9, "bold"),
-            fill="#F8FAFC",
+            fill="#ECE8DC",
             anchor="w",
         )
 
@@ -537,7 +556,7 @@ class PromptDialog:
         self.win.title("PROMPT")
         self.win.attributes("-topmost", True)
         self.win.attributes("-type", "dialog")
-        self.win.configure(bg="#0F172A")
+        self.win.configure(bg="#0D110D")
 
         w, h = 680, 125
         sw = self.win.winfo_screenwidth()
@@ -547,17 +566,17 @@ class PromptDialog:
         self.win.geometry(f"{w}x{h}+{cx}+{cy}")
 
         self.canvas = tk.Canvas(
-            self.win, bg="#0F172A", highlightthickness=1, highlightbackground="#38BDF8"
+            self.win, bg="#0D110D", highlightthickness=1, highlightbackground="#FF5A1F"
         )
         self.canvas.pack(fill="both", expand=True)
 
-        self.canvas.create_rectangle(0, 0, w, 32, fill="#1E293B", outline="")
+        self.canvas.create_rectangle(0, 0, w, 32, fill="#111610", outline="")
         self.canvas.create_text(
             16,
             16,
             text=f"◈ {title.upper()}",
             font=("DejaVu Sans", 9, "bold"),
-            fill="#38BDF8",
+            fill="#FF5A1F",
             anchor="w",
         )
         self.canvas.create_text(
@@ -565,23 +584,23 @@ class PromptDialog:
             16,
             text="[ESC FECHA • ENTER ENVIA]",
             font=("DejaVu Sans", 7, "bold"),
-            fill="#94A3B8",
+            fill="#949B8F",
             anchor="e",
         )
 
         self.canvas.create_text(
-            16, 48, text=subtitle, font=("DejaVu Sans", 9), fill="#CBD5E1", anchor="w"
+            16, 48, text=subtitle, font=("DejaVu Sans", 9), fill="#C9C6BA", anchor="w"
         )
 
         self.entry = tk.Entry(
             self.win,
-            bg="#1E293B",
-            fg="#F8FAFC",
-            insertbackground="#38BDF8",
+            bg="#111610",
+            fg="#ECE8DC",
+            insertbackground="#FF5A1F",
             font=("DejaVu Sans", 11),
             relief="flat",
             highlightthickness=1,
-            highlightbackground="#0284C7",
+            highlightbackground="#FF5A1F",
         )
         self.entry.place(x=16, y=68, width=w - 32, height=36)
 
@@ -605,7 +624,7 @@ class PromptDialog:
             114,
             text="◈ Processando com contexto visual e histórico...",
             font=("DejaVu Sans", 8, "italic"),
-            fill="#34D399",
+            fill="#A8B894",
             anchor="w",
         )
         self.callback_submit(text, self)
@@ -626,13 +645,13 @@ class PromptDialog:
         cy = 160
         self.win.geometry(f"{w}x{new_h}+{cx}+{cy}")
 
-        self.canvas.create_rectangle(0, 0, w, 32, fill="#1E293B", outline="")
+        self.canvas.create_rectangle(0, 0, w, 32, fill="#111610", outline="")
         self.canvas.create_text(
             16,
             16,
             text="◈ ANÁLISE DETALHADA",
             font=("DejaVu Sans", 9, "bold"),
-            fill="#38BDF8",
+            fill="#FF5A1F",
             anchor="w",
         )
         self.canvas.create_text(
@@ -640,7 +659,7 @@ class PromptDialog:
             16,
             text="[ESC P/ FECHAR]",
             font=("DejaVu Sans", 7, "bold"),
-            fill="#94A3B8",
+            fill="#949B8F",
             anchor="e",
         )
 
@@ -649,7 +668,7 @@ class PromptDialog:
             50,
             text=full_text,
             font=("DejaVu Sans", 10),
-            fill="#F8FAFC",
+            fill="#ECE8DC",
             width=w - 36,
             anchor="nw",
         )
@@ -676,6 +695,7 @@ class JarvisHUDOverlay:
         self.active_prompt: PromptDialog | None = None
         self.current_image: Image.Image | None = None
         self.is_cards_active = False
+        self.results: queue.Queue = queue.Queue()
 
     def scan_start(self, monitor_info: dict | None):
         self.indicator.show_scanning(monitor_info)
@@ -720,7 +740,7 @@ class JarvisHUDOverlay:
         def _on_submit(query, dialog):
             def _worker():
                 ans = ai_client.ask_followup(screenshot_image, None, query)
-                self.root.after(0, lambda: dialog.show_response(query, ans))
+                self.results.put(("central", dialog, query, ans))
 
             threading.Thread(target=_worker, daemon=True).start()
 
@@ -774,9 +794,30 @@ class JarvisHUDOverlay:
                 idx,
                 item,
                 (best_x, best_y, card_w, card_h),
+                monitor_info,
                 on_click_callback=self.open_card_prompt,
             )
             self.cards.append(card)
+
+    def poll_results(self):
+        """Aplica respostas das threads no thread principal do Tk."""
+        while True:
+            try:
+                item = self.results.get_nowait()
+            except queue.Empty:
+                return
+
+            try:
+                if item[0] == "central":
+                    _, dialog, query, ans = item
+                    dialog.show_response(query, ans)
+                else:
+                    _, card, query, ans, dialog = item
+                    self._apply_card_answer(card, query, ans, dialog)
+            except tk.TclError:
+                pass
+            except Exception as e:
+                print(f"[HUD Resultado] {e}")
 
     def open_card_prompt(self, index: int):
         idx = index - 1
@@ -794,9 +835,7 @@ class JarvisHUDOverlay:
                 ans = ai_client.ask_followup(
                     self.current_image, target_card.insight, query
                 )
-                self.root.after(
-                    0, lambda: self._apply_card_answer(target_card, query, ans, dialog)
-                )
+                self.results.put(("card", target_card, query, ans, dialog))
 
             threading.Thread(target=_worker, daemon=True).start()
 
