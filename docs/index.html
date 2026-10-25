@@ -371,17 +371,18 @@ SPECTRA_MODEL=<span class="c-s">your-vision-model</span></code></pre>
       <div class="container install-grid">
         <div class="install-copy">
           <span class="section-index mono">05</span>
-          <h2>Clone. Add a key. Run.</h2>
-          <p>No package yet. The installer creates a virtualenv, copies the config and registers a desktop entry.</p>
+          <h2>Install. Add a key. Run.</h2>
+          <p>Use the <strong>.deb</strong>, the portable <strong>tarball</strong>, or clone. The package registers <code>spectra-hud</code> and a desktop entry. The .deb creates a local Python env and needs internet once.</p>
 
           <ul class="req-list">
             <li><span class="mono">PLATFORM</span> Linux with X11</li>
-            <li><span class="mono">PYTHON</span> 3.10 or newer, with Tkinter</li>
+            <li><span class="mono">PYTHON</span> 3.10+ with Tkinter + venv</li>
             <li><span class="mono">SYSTEM</span> <code>xdotool</code></li>
             <li><span class="mono">KEY</span> any OpenAI-compatible vision endpoint</li>
           </ul>
 
           <p class="warn"><strong>Wayland is not supported in v0.2.</strong> Capture and global hotkeys need X11.</p>
+          <p class="pkg-note mono">DOWNLOAD THE .DEB OR TARBALL → <a href="https://github.com/kaiqueramos/spectra-hud/releases/latest">GITHUB RELEASES</a></p>
         </div>
 
         <div class="terminal">

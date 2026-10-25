@@ -17,6 +17,14 @@ if [ "${XDG_SESSION_TYPE:-}" = "wayland" ]; then
   echo "WARN: Wayland session detected. Spectra v0.2 supports X11 only."
 fi
 
+echo "==> Checking python3-venv"
+if ! python3 -c "import ensurepip" >/dev/null 2>&1; then
+  echo "ERROR: python3-venv (ensurepip) is required."
+  echo "  Ubuntu/Debian: sudo apt install python3-venv"
+  echo "  Fedora/Arch:   install the distro package that provides python3 venv/ensurepip"
+  exit 1
+fi
+
 echo "==> Creating virtualenv"
 python3 -m venv .venv
 # shellcheck disable=SC1091

@@ -61,13 +61,36 @@ No server, no telemetry. The screenshot goes only to the endpoint **you** config
 ## Requirements
 
 - Linux with **X11** (Wayland is not supported in v0.2; the app fails with a clear message).
-- Python **3.10+** with Tkinter (`sudo apt install python3-tk`).
+- Python **3.10+** with Tkinter and venv (`sudo apt install python3-tk python3-venv`).
 - `xdotool` is optional (Xlib fallback is built in).
 - `keyring` and `pystray` are installed by `requirements.txt`; the tray needs the GNOME AppIndicator extension.
 - An API key for an OpenAI-compatible vision endpoint (or a local Ollama model).
 - Optional: **Share Tech Mono**, **FiraCode Nerd Font** and **Ubuntu** for the intended typography; the app falls back to DejaVu.
 
-## Quick start
+## Install
+
+### Ubuntu / Debian package
+
+Download the `.deb` from [Releases](https://github.com/kaiqueramos/spectra-hud/releases/latest) and install:
+
+```bash
+sudo apt install ./spectra-hud_0.2.1_all.deb
+```
+
+The package creates a Python venv at `/opt/spectra-hud/.venv` and downloads its Python dependencies during install, so it needs internet once. It registers the `spectra-hud` command and a desktop entry.
+
+### Tarball
+
+Download `spectra-hud-0.2.1.tar.gz` from the same release, extract and run the user-local installer:
+
+```bash
+tar xzf spectra-hud-0.2.1.tar.gz
+cd spectra-hud-0.2.1
+./install.sh
+./run.sh
+```
+
+### From source
 
 ```bash
 git clone https://github.com/kaiqueramos/spectra-hud.git

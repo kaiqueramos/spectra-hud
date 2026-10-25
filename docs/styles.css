@@ -1146,3 +1146,11 @@ kbd {
   .film-wrap { padding: 5px; box-shadow: 7px 7px 0 #040604; }
   .film-meta { flex-wrap: wrap; gap: 4px 14px; font-size: 8px; }
 }
+
+.pkg-note {
+  margin-top: 22px;
+  font-size: 9.5px;
+  letter-spacing: .12em;
+  color: var(--dim);
+}
+.pkg-note a { color: var(--signal); border-bottom: 1px solid var(--signal); }

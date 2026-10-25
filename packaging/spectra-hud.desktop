@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Spectra HUD
+Comment=Screen-aware AI HUD for Linux/X11
+Exec=spectra-hud
+Icon=spectra-hud
+Terminal=true
+Categories=Utility;
+StartupNotify=true

@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+APP=/opt/spectra-hud
+if [ ! -x "$APP/.venv/bin/python" ]; then
+    echo "Spectra HUD is not configured. Run: sudo dpkg --configure -a" >&2
+    exit 1
+fi
+exec "$APP/.venv/bin/python" "$APP/main.py" "$@"
