@@ -25,6 +25,7 @@ from pynput import keyboard
 
 import ai_client
 import config
+import i18n
 import theme
 from ai_client import analyze_screenshot
 from overlay import JarvisHUDOverlay
@@ -81,7 +82,7 @@ def acquire_lock():
     try:
         fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except BlockingIOError:
-        print("[Spectra] Já existe uma instância rodando. Feche a outra primeiro.")
+        print(f"[Spectra] {i18n.tr('main.instance')}")
         sys.exit(1)
     handle.write(str(os.getpid()))
     handle.flush()
@@ -93,7 +94,7 @@ def toggle_pause() -> None:
     paused = not paused
     cfg["paused"] = paused
     config.save(cfg)
-    flash("PAUSADO" if paused else "ATIVO", "alerta" if paused else "info", 2)
+    flash(i18n.tr("main.paused") if paused else i18n.tr("main.active"), "alerta" if paused else "info", 2)
     log.info("paused=%s", paused)
 
 
@@ -101,22 +102,27 @@ def on_saved(new_cfg: dict) -> None:
     global cfg, paused
     cfg = new_cfg
     paused = bool(cfg.get("paused", False))
+    i18n.set_language(cfg.get("language", "pt"))
     theme.set_current(cfg.get("theme", "spectra"))
     ai_client.reload_config(cfg)
-    if tray is not None and tray.icon is not None:
-        try:
-            tray.icon.update_menu()
-        except Exception:
-            pass
+    if tray is not None:
+        tray.refresh()
     log.info("config salva provider=%s model=%s", cfg.get("provider"), cfg.get("model"))
 
 
 def open_center(first_run: bool = False) -> None:
     global command_center
     try:
+        if hud_overlay is not None:
+            hud_overlay.clear()
+    except Exception:
+        pass
+    try:
         if command_center is not None and command_center.win.winfo_exists():
+            command_center.win.deiconify()
             command_center.win.lift()
             command_center.win.focus_force()
+            command_center._force_x_focus()
             return
     except Exception:
         pass
@@ -143,12 +149,12 @@ def run_scan_worker():
     global is_analyzing
     monitor = None
     if paused:
-        flash("PAUSADO · retome no centro de comando", "alerta", 2.5)
+        flash(i18n.tr("main.paused_hint"), "alerta", 2.5)
         is_analyzing = False
         return
     if not ai_client.DEMO and not config.has_consent(cfg):
         action_queue.put(("COMMAND_CENTER",))
-        flash("CONFIGURE E CONSINTA ANTES DE ESCANEAR", "alerta", 4)
+        flash(i18n.tr("main.configure_first"), "alerta", 4)
         is_analyzing = False
         return
 
@@ -210,21 +216,21 @@ def trigger_toggle():
         return
 
     if paused:
-        flash("PAUSADO", "alerta", 2)
+        flash(i18n.tr("main.paused"), "alerta", 2)
         return
     if not ai_client.DEMO and not config.has_consent(cfg):
         action_queue.put(("COMMAND_CENTER",))
-        flash("CONFIGURE O SPECTRA", "alerta", 3)
+        flash(i18n.tr("main.configure"), "alerta", 3)
         return
 
     if is_analyzing:
         ai_client.cancel_scan()
-        flash("CANCELANDO…", "alerta", 1.5)
+        flash(i18n.tr("main.canceling"), "alerta", 1.5)
         return
 
     now = time.time()
     if now - last_scan_at < SCAN_COOLDOWN:
-        flash("AGUARDE UM INSTANTE", "info", 1.5)
+        flash(i18n.tr("main.wait"), "info", 1.5)
         return
 
     last_scan_at = now
@@ -235,7 +241,7 @@ def trigger_toggle():
 def trigger_central_bar():
     global hud_overlay
     if paused:
-        flash("PAUSADO", "alerta", 2)
+        flash(i18n.tr("main.paused"), "alerta", 2)
         return
     if not ai_client.DEMO and not config.has_consent(cfg):
         action_queue.put(("COMMAND_CENTER",))
@@ -277,12 +283,12 @@ def process_queue(root):
 
             elif action == "SCAN_EMPTY":
                 _, monitor = msg
-                hud_overlay.scan_flash(monitor, "NADA RELEVANTE NA TELA", "info", 2.5)
+                hud_overlay.scan_flash(monitor, i18n.tr("main.nothing"), "info", 2.5)
 
             elif action == "SCAN_FAIL":
                 _, monitor, reason, kind = msg
                 reason = str(reason)[:160]
-                hud_overlay.scan_flash(monitor, f"ERRO: {reason}", "alerta", 7.0)
+                hud_overlay.scan_flash(monitor, i18n.tr("main.error", reason=reason), "alerta", 7.0)
 
             elif action == "SCAN_BLOCKED":
                 _, title = msg
@@ -293,13 +299,13 @@ def process_queue(root):
 
             elif action == "SCAN_CANCELED":
                 hud_overlay.clear()
-                hud_overlay.scan_flash(None, "CANCELADO", "info", 2.0)
+                hud_overlay.scan_flash(None, i18n.tr("main.canceled"), "info", 2.0)
 
             elif action == "RENDER_INSIGHTS":
                 _, monitor, img, insights, meta = msg
                 hud_overlay.render_insights(monitor, img, insights)
                 latency = float(meta.get("latency", 0.0) or 0.0)
-                text = f"{len(insights)} PONTOS · {latency:.1f}s"
+                text = i18n.tr("main.points", n=len(insights), latency=f"{latency:.1f}")
                 cost = meta.get("cost")
                 if cost is not None:
                     text += f" · US$ {cost:.4f}"
@@ -338,27 +344,25 @@ def main():
     setup_logging()
     cfg = config.load()
     paused = bool(cfg.get("paused", False))
+    i18n.set_language(cfg.get("language", "pt"))
     theme.set_current(cfg.get("theme", "spectra"))
     ai_client.reload_config(cfg)
 
     if is_wayland():
-        print(
-            "[Spectra] Wayland não é suportado na v0.1.\n"
-            "Capture e atalhos globais dependem de X11. Use uma sessão X11."
-        )
+        print(f"[Spectra] {i18n.tr('main.wayland')}")
         sys.exit(1)
 
     lock_handle = acquire_lock()
 
     print("=" * 65)
-    print(" 👁️ SPECTRA HUD - CAMADA COGNITIVA VISUAL ATIVA")
-    print(f"   scan  : {cfg.get('hotkey_scan')}")
-    print(f"   barra : {cfg.get('hotkey_bar')}")
-    print(f"   centro: {cfg.get('hotkey_center')}")
-    print(f"   pausa : {cfg.get('hotkey_pause')}")
-    print(" Pressione Ctrl + C no terminal para encerrar")
+    print(f" {i18n.tr('main.start_title')}")
+    print(f"   {i18n.tr('label.scan')}  : {cfg.get('hotkey_scan')}")
+    print(f"   {i18n.tr('label.bar')} : {cfg.get('hotkey_bar')}")
+    print(f"   {i18n.tr('label.center')}: {cfg.get('hotkey_center')}")
+    print(f"   {i18n.tr('label.pause')} : {cfg.get('hotkey_pause')}")
+    print(f" {i18n.tr('main.start_hint')}")
     if ai_client.DEMO:
-        print(" MODO DEMO ATIVO (SPECTRA_DEMO=1): sem chamadas ao modelo.")
+        print(f" {i18n.tr('main.demo')}")
     print("=" * 65)
 
     try:

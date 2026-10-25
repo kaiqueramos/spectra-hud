@@ -18,6 +18,7 @@ from PIL import Image
 from Xlib import X, display
 
 import ai_client
+import i18n
 import theme
 
 
@@ -25,10 +26,22 @@ import theme
 def get_kind_style(kind: str | None) -> dict:
     t = theme.current()
     styles = {
-        "alerta": {"accent": t["accent"], "border": t["accent"], "icon": "⚠", "tag": "ALERTA"},
-        "acao": {"accent": t["text"], "border": t["muted"], "icon": "▶", "tag": "AÇÃO"},
-        "item": {"accent": t["success"], "border": t["muted"], "icon": "◆", "tag": "ITEM"},
-        "info": {"accent": t["muted"], "border": t["dim"], "icon": "●", "tag": "INFO"},
+        "alerta": {
+            "accent": t["accent"], "border": t["accent"], "icon": "⚠",
+            "tag": i18n.tr("overlay.kind.alert"),
+        },
+        "acao": {
+            "accent": t["text"], "border": t["muted"], "icon": "▶",
+            "tag": i18n.tr("overlay.kind.action"),
+        },
+        "item": {
+            "accent": t["success"], "border": t["muted"], "icon": "◆",
+            "tag": i18n.tr("overlay.kind.item"),
+        },
+        "info": {
+            "accent": t["muted"], "border": t["dim"], "icon": "●",
+            "tag": i18n.tr("overlay.kind.info"),
+        },
     }
     return styles.get(kind or "info", styles["info"])
 
@@ -256,7 +269,7 @@ class CardWidget:
         self.canvas.create_text(
             12,
             footer_y + 11,
-            text="CLIQUE P/ PERGUNTAR  •  ARRASTE P/ MOVER",
+            text=i18n.tr("overlay.card_footer"),
             font=("DejaVu Sans", 7, "bold"),
             fill=self.SUBTEXT_COLOR,
             anchor="w",
@@ -498,7 +511,7 @@ class ScanIndicator:
             cancel_id = self.canvas.create_text(
                 w - 12,
                 cy,
-                text="CANCELAR",
+                text=i18n.tr("overlay.cancel"),
                 font=("DejaVu Sans", 8, "bold"),
                 fill=t["accent"],
                 anchor="e",
@@ -510,7 +523,7 @@ class ScanIndicator:
         self.hide()
 
     def show_scanning(self, monitor: dict | None):
-        label = "ESCANEANDO TELA…"
+        label = i18n.tr("overlay.scanning")
         self._build(monitor, label, f"{label}  999s", "info", cancel=True)
         self._t0 = time.time()
         self._tick()
@@ -575,7 +588,7 @@ class PromptDialog:
 
         self.t = theme.current()
         self.win = tk.Toplevel(parent_root)
-        self.win.title("PROMPT")
+        self.win.title("Spectra Prompt")
         self.win.attributes("-topmost", True)
         self.win.attributes("-type", "dialog")
         self.win.configure(bg=self.t["bg"])
@@ -603,7 +616,7 @@ class PromptDialog:
         self.canvas.create_text(
             w - 16,
             16,
-            text="[ESC FECHA • ENTER ENVIA]",
+            text=i18n.tr("overlay.prompt_hint"),
             font=("DejaVu Sans", 7, "bold"),
             fill=self.t["dim"],
             anchor="e",
@@ -643,7 +656,7 @@ class PromptDialog:
         self.canvas.create_text(
             16,
             114,
-            text="◈ Processando com contexto visual e histórico...",
+            text=i18n.tr("overlay.processing"),
             font=("DejaVu Sans", 8, "italic"),
             fill=self.t["success"],
             anchor="w",
@@ -656,7 +669,7 @@ class PromptDialog:
             self.entry.destroy()
             self.entry = None
 
-        full_text = f'Q: "{query}"\n\nRESPOSTA: {answer}'
+        full_text = f'Q: "{query}"\n\n{i18n.tr("overlay.answer")}: {answer}'
         approx_lines = max(4, len(full_text) // 55 + 5)
         new_h = approx_lines * 20 + 65
         w = 680
@@ -669,7 +682,7 @@ class PromptDialog:
         self.canvas.create_text(
             16,
             16,
-            text="◈ ANÁLISE DETALHADA",
+            text=i18n.tr("overlay.detail_title"),
             font=("DejaVu Sans", 9, "bold"),
             fill=self.t["accent"],
             anchor="w",
@@ -677,7 +690,7 @@ class PromptDialog:
         self.canvas.create_text(
             w - 16,
             16,
-            text="[ESC P/ FECHAR]",
+            text=i18n.tr("overlay.detail_hint"),
             font=("DejaVu Sans", 7, "bold"),
             fill=self.t["dim"],
             anchor="e",
@@ -766,8 +779,8 @@ class JarvisHUDOverlay:
 
         self.active_prompt = PromptDialog(
             self.root,
-            title="COMANDO COGNITIVO GLOBAL",
-            subtitle="Faça uma pergunta sobre a tela atual:",
+            title=i18n.tr("overlay.prompt_title"),
+            subtitle=i18n.tr("overlay.prompt_subtitle"),
             callback_submit=_on_submit,
             callback_close=lambda: setattr(self, "active_prompt", None),
         )
@@ -842,7 +855,7 @@ class JarvisHUDOverlay:
             return
 
         target_card = self.cards[idx]
-        label = target_card.insight.get("label", "PONTO")
+        label = target_card.insight.get("label", i18n.tr("overlay.point"))
 
         if self.active_prompt:
             self.active_prompt.close()
@@ -858,8 +871,8 @@ class JarvisHUDOverlay:
 
         self.active_prompt = PromptDialog(
             self.root,
-            title=f"PERGUNTA SOBRE [{label.upper()}]",
-            subtitle=f"Foco selecionado: {label}. Digite sua dúvida:",
+            title=i18n.tr("overlay.card_prompt", label=label.upper()),
+            subtitle=i18n.tr("overlay.card_subtitle", label=label),
             callback_submit=_on_submit,
             callback_close=lambda: setattr(self, "active_prompt", None),
         )
@@ -869,4 +882,4 @@ class JarvisHUDOverlay:
     ):
         dialog.close()
         self.active_prompt = None
-        target_card.update_insight(f'Q: "{query}"\n\nRESPOSTA: {answer}')
+        target_card.update_insight(f'Q: "{query}"\n\n{i18n.tr("overlay.answer")}: {answer}')

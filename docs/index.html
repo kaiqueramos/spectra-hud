@@ -44,7 +44,7 @@
       </nav>
 
       <div class="nav-right">
-        <span class="nav-ver">v0.1.0</span>
+        <span class="nav-ver">v0.2.0</span>
         <a class="btn btn-sm" href="https://github.com/kaiqueramos/spectra-hud">GitHub <span aria-hidden="true">↗</span></a>
       </div>
     </div>
@@ -66,11 +66,11 @@
         <p class="lede">Press a hotkey. Spectra reads the screen and pins the next move to the exact element.</p>
 
         <div class="cta-row">
-          <a class="btn btn-primary" href="#install">Install v0.1</a>
+          <a class="btn btn-primary" href="#install">Install v0.2</a>
           <a class="btn btn-ghost" href="https://github.com/kaiqueramos/spectra-hud">Read the source</a>
         </div>
 
-        <p class="hero-note">57 tests. No telemetry. Your key stays local.</p>
+        <p class="hero-note">59 tests. No telemetry. Your key stays local.</p>
       </div>
 
       <div class="hero-demo">
@@ -219,9 +219,8 @@
 
           <article class="cell cell-b">
             <h3>Bring your own key.</h3>
-            <p>Any OpenAI-compatible vision endpoint. The key stays in <code>.env</code>. No Spectra account.</p>
-            <pre class="mini-code"><code><span class="c-d"># .env</span>
-SPECTRA_API_KEY=<span class="c-s">sk-•••</span>
+            <p>Any OpenAI-compatible vision endpoint. The key stays in the system keyring. No Spectra account.</p>
+            <pre class="mini-code"><code><span class="c-d"># keyring (service: spectra-hud)</span>
 SPECTRA_MODEL=<span class="c-s">your-vision-model</span></code></pre>
           </article>
 
@@ -251,9 +250,9 @@ SPECTRA_MODEL=<span class="c-s">your-vision-model</span></code></pre>
           </article>
 
           <article class="cell cell-f">
-            <h3>57 tests.</h3>
+            <h3>59 tests.</h3>
             <p>Geometry, schema and parsing are covered. The overlay is tested by hand on X11.</p>
-            <div class="term-line mono" aria-hidden="true"><span class="c-g">$</span> pytest -q<br><span class="c-g">57 passed</span> in 0.40s</div>
+            <div class="term-line mono" aria-hidden="true"><span class="c-g">$</span> pytest -q<br><span class="c-g">59 passed</span> in 0.55s</div>
           </article>
         </div>
       </div>
@@ -279,7 +278,7 @@ SPECTRA_MODEL=<span class="c-s">your-vision-model</span></code></pre>
             </div>
             <div class="key-row">
               <div class="keys"><kbd>Ctrl</kbd><span>+</span><kbd>Alt</kbd><span>+</span><kbd>C</kbd></div>
-              <div><strong>Command center</strong><span>Provider, key, consent, pause, blocklist and tray.</span></div>
+              <div><strong>Command center</strong><span>Provider, key, consent, pause, blocklist, 10 themes and 3 languages.</span></div>
             </div>
             <div class="key-row">
               <div class="keys"><kbd>Ctrl</kbd><span>+</span><kbd>Alt</kbd><span>+</span><kbd>P</kbd></div>
@@ -335,7 +334,7 @@ SPECTRA_MODEL=<span class="c-s">your-vision-model</span></code></pre>
           <ul class="privacy-facts">
             <li><span class="mono">NO TELEMETRY</span> No analytics, no pings, no account.</li>
             <li><span class="mono">LOCAL CACHE</span> Text only, ten events, one hour.</li>
-            <li><span class="mono">NO REDACTION</span> v0.1 has no pause mode. Do not scan banking or passwords.</li>
+            <li><span class="mono">NO REDACTION</span> v0.2 has private mode and a window-title blocklist, but no pixel redaction. Do not scan banking or passwords.</li>
           </ul>
         </div>
       </div>
@@ -356,7 +355,7 @@ SPECTRA_MODEL=<span class="c-s">your-vision-model</span></code></pre>
             <li><span class="mono">KEY</span> any OpenAI-compatible vision endpoint</li>
           </ul>
 
-          <p class="warn"><strong>Wayland is not supported in v0.1.</strong> Capture and global hotkeys need X11.</p>
+          <p class="warn"><strong>Wayland is not supported in v0.2.</strong> Capture and global hotkeys need X11.</p>
         </div>
 
         <div class="terminal">
@@ -369,11 +368,9 @@ SPECTRA_MODEL=<span class="c-s">your-vision-model</span></code></pre>
 git clone https://github.com/kaiqueramos/spectra-hud.git
 <span class="c-d"># 2. install</span>
 <span class="c-g">cd</span> spectra-hud && ./install.sh
-<span class="c-d"># 3. add your key</span>
-<span class="c-g">nano</span> .env
-<span class="c-d"># 4. run</span>
+<span class="c-d"># 3. run — first run opens the command center</span>
 ./run.sh</code></pre>
-          <div class="terminal-foot mono"><span>APACHE 2.0</span><span>v0.1.0</span><span>LINUX / X11</span></div>
+          <div class="terminal-foot mono"><span>APACHE 2.0</span><span>v0.2.0</span><span>LINUX / X11</span></div>
         </div>
       </div>
     </section>

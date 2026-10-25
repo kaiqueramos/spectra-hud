@@ -6,7 +6,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Platform: Linux X11](https://img.shields.io/badge/platform-Linux%20%7C%20X11-lightgrey.svg)](#requirements)
 
-**Status: v0.1 — experimental.** Linux + X11 only. Bring your own API key. The prompt is Brazilian Portuguese.
+**Status: v0.2 — experimental.** Linux + X11 only. Bring your own API key. Interface in PT-BR, English or Spanish; model responses follow the UI language.
 
 [**Website**](https://kaiqueramos.github.io/spectra-hud/) · [**GitHub**](https://github.com/kaiqueramos/spectra-hud) · [**Privacy**](PRIVACY.md) · [**LGPD**](docs/LGPD.md)
 
@@ -40,6 +40,10 @@ No server, no telemetry. The screenshot goes only to the endpoint **you** config
 - **First-run wizard**: opens automatically when there is no key or consent.
 - **Vision test**: sends a red/blue image and confirms the model actually sees it.
 - **10 themes** (5 dark, 5 light) with live preview; `Ctrl+T` cycles. See [docs/THEMES.md](docs/THEMES.md).
+- **3 interface languages** (PT-BR, EN, ES); the model answers in the selected language. See [docs/I18N.md](docs/I18N.md).
+- **Frameless Spectra titlebar** with drag, hide and close; custom switches, pill buttons and live theme cards.
+- **Telemetry and system panels**: latency, tokens, cost, provider, keyring, consent, privacy and cache.
+- **Microanimations** (scanline, pulsing LED, switches) with an on/off toggle.
 - **System keyring** for the API key (fallback to a 600 config file).
 - **Tray icon** (AppIndicator) with scan, pause and quit.
 - Global scan hotkey with toggle and a “scanning” indicator.
@@ -51,15 +55,16 @@ No server, no telemetry. The screenshot goes only to the endpoint **you** config
 - Multi-monitor aware (X11), with a safe side-column fallback when the model’s box is bad.
 - Bring your own key: any OpenAI-compatible vision model.
 - Local models via Ollama.
-- 57 unit tests.
+- 59 unit tests.
 
 ## Requirements
 
-- Linux with **X11** (Wayland is not supported in v0.1; the app fails with a clear message).
+- Linux with **X11** (Wayland is not supported in v0.2; the app fails with a clear message).
 - Python **3.10+** with Tkinter (`sudo apt install python3-tk`).
 - `xdotool` is optional (Xlib fallback is built in).
 - `keyring` and `pystray` are installed by `requirements.txt`; the tray needs the GNOME AppIndicator extension.
 - An API key for an OpenAI-compatible vision endpoint (or a local Ollama model).
+- Optional: **Share Tech Mono**, **FiraCode Nerd Font** and **Ubuntu** for the intended typography; the app falls back to DejaVu.
 
 ## Quick start
 
@@ -70,7 +75,7 @@ cd spectra-hud
 ./run.sh
 ```
 
-The first run opens the **command center**. Choose a provider, paste the key, click **Testar visão**, accept the consent and save. The key goes to the system keyring; settings go to `~/.config/spectra-hud/config.json`.
+The first run opens the **command center**. Choose a provider, paste the key, click **Test vision**, accept the consent and save. The key goes to the system keyring; settings go to `~/.config/spectra-hud/config.json`.
 
 Manual install:
 
@@ -96,8 +101,10 @@ python3 main.py
 | Blocklist | Window-title terms that block a scan |
 | Hotkeys | Scan, command bar, center, pause (restart to apply) |
 | Pricing | Optional `$ / 1M` input/output for cost display |
+| Language | PT-BR, English or Spanish (UI and model response) |
+| Animations | Scanline, LED pulse and switch transitions |
 
-The status panel shows the last scan latency, model and token usage; cost appears when pricing is set.
+The telemetry panel shows the last scan latency, tokens and cost; the status line shows the last action and model. Cost appears when pricing is set.
 
 ## Configuration
 
@@ -149,6 +156,7 @@ Every scan sends a JPEG of the **active monitor** to the endpoint you configure.
 - **No pixel redaction** yet: pause/blocklist are the current controls. Use a local model for sensitive work.
 - **Prompt injection:** text visible on screen is untrusted input to the model.
 - Some window managers may flicker or steal focus from the overlay.
+- The frameless command center is tuned for **1080p** (1060×1000) and is not in the taskbar; use the tray or `Ctrl+Alt+C` to restore it.
 - No packaging/AppImage yet.
 
 ## Roadmap
@@ -162,7 +170,8 @@ Every scan sends a JPEG of the **active monitor** to the endpoint you configure.
 - [ ] Wayland support (XDG Desktop Portal + `grim`)
 - [ ] Pixel redaction and region selection
 - [ ] AppImage packaging
-- [ ] English prompt / i18n
+- [x] Interface i18n (PT-BR / EN / ES) + model response language
+- [ ] Full prompt/site i18n
 - [ ] Integration tests for GNOME/KDE/i3, HiDPI
 
 ## Demo mode

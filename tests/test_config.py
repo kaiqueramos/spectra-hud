@@ -20,6 +20,8 @@ def cfg_env(monkeypatch, tmp_path):
 def test_defaults_and_save_roundtrip(cfg_env):
     cfg = config.load()
     assert cfg["provider"] == "opencode-go"
+    assert cfg["language"] == "pt"
+    assert cfg["animations"] is True
     cfg["model"] = "deepseek-v4.1-flash"
     config.save(cfg)
     assert config.load()["model"] == "deepseek-v4.1-flash"

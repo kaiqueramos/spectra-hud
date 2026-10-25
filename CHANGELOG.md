@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.0 — 2026-10-25
+
+Command center polish.
+
+- Frameless Spectra titlebar with drag, hide and close; no WM decoration in dark or light themes.
+- Custom switches, pill buttons, live theme cards and icon controls.
+- Telemetry panel (latency, tokens, cost) and system panel (provider, keyring, consent, privacy, cache).
+- Microanimations: scanline, pulsing LED, switch transitions; toggle in the interface section.
+- Interface languages: Portuguese (BR), English and Spanish; the model answers in the selected language.
+- Immediate private-mode toggle and language/theme persistence.
+- 59 unit tests.
+
 ## 0.1.0 — 2026-10-24
 
 First public release.
@@ -34,5 +46,4 @@ First public release.
 - Prompt-injection guard in the system prompt.
 - `SPECTRA_DEMO=1` renders canned cards for screenshots and videos (no model calls).
 
-Known limitations: X11 only, Brazilian Portuguese prompt, no redaction/pause mode,
-no packaging yet.
+Known limitations: X11 only, the base system prompt is Brazilian Portuguese (the response language is overridden), no pixel redaction, no packaging yet.

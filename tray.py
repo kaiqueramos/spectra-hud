@@ -8,6 +8,8 @@ from typing import Any, Callable
 
 from PIL import Image, ImageDraw
 
+import i18n
+
 log = logging.getLogger("spectra.tray")
 
 try:
@@ -37,25 +39,29 @@ class SpectraTray:
         self.icon: Any = None
         self._thread: threading.Thread | None = None
 
+    def _menu(self):
+        return pystray.Menu(
+            pystray.MenuItem(
+                i18n.tr("tray.open"),
+                lambda: self.dispatch(("COMMAND_CENTER",)),
+                default=True,
+            ),
+            pystray.MenuItem(i18n.tr("tray.scan"), lambda: self.dispatch(("SCAN",))),
+            pystray.MenuItem(
+                i18n.tr("tray.pause"), lambda: self.dispatch(("TOGGLE_PAUSE",))
+            ),
+            pystray.Menu.SEPARATOR,
+            pystray.MenuItem(i18n.tr("tray.quit"), lambda: self.dispatch(("QUIT",))),
+        )
+
     def start(self) -> bool:
         if pystray is None:
             log.warning("pystray indisponível; bandeja desativada")
             return False
         try:
-            menu = pystray.Menu(
-                pystray.MenuItem(
-                    "Abrir centro de comando",
-                    lambda: self.dispatch(("COMMAND_CENTER",)),
-                    default=True,
-                ),
-                pystray.MenuItem("Escanear agora", lambda: self.dispatch(("SCAN",))),
-                pystray.MenuItem(
-                    "Pausar / retomar", lambda: self.dispatch(("TOGGLE_PAUSE",))
-                ),
-                pystray.Menu.SEPARATOR,
-                pystray.MenuItem("Sair", lambda: self.dispatch(("QUIT",))),
+            self.icon = pystray.Icon(
+                "spectra-hud", _icon_image(), i18n.tr("tray.title"), self._menu()
             )
-            self.icon = pystray.Icon("spectra-hud", _icon_image(), "Spectra HUD", menu)
             self._thread = threading.Thread(
                 target=self.icon.run, name="spectra-tray", daemon=True
             )
@@ -66,6 +72,16 @@ class SpectraTray:
             log.warning("falha ao iniciar bandeja: %s", exc)
             self.icon = None
             return False
+
+    def refresh(self) -> None:
+        """Reconstrói o menu após troca de idioma."""
+        if self.icon is None:
+            return
+        try:
+            self.icon.menu = self._menu()
+            self.icon.update_menu()
+        except Exception:
+            pass
 
     def stop(self) -> None:
         if self.icon is not None:

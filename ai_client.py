@@ -20,6 +20,7 @@ from PIL import Image
 
 import config
 import demo
+import i18n
 from session_memory import session
 
 ENV_PATH = Path(__file__).resolve().parent / ".env"
@@ -59,15 +60,23 @@ LAST_ERROR = ""  # Último erro de análise/consulta, para o HUD exibir.
 LAST_ERROR_KIND = ""
 LAST_META: dict = {}
 CANCEL_EVENT = threading.Event()
+RESPONSE_LANGUAGE = "Portuguese (Brazil)"
+LANGUAGE_NAMES = {
+    "pt": "Portuguese (Brazil)",
+    "en": "English",
+    "es": "Spanish",
+}
 
 
 def reload_config(cfg: dict | None = None) -> None:
-    """Recarrega base/modelo/chave do config.json (ou env, que tem prioridade)."""
-    global API_KEY, BASE_URL, MODEL_NAME
+    """Recarrega base/modelo/chave/idioma do config.json (env tem prioridade)."""
+    global API_KEY, BASE_URL, MODEL_NAME, RESPONSE_LANGUAGE
+    cfg = cfg or config.load()
     rt = config.runtime(cfg)
     API_KEY = rt["api_key"]
     BASE_URL = rt["base_url"]
     MODEL_NAME = rt["model"]
+    RESPONSE_LANGUAGE = LANGUAGE_NAMES.get(cfg.get("language", "pt"), "Portuguese (Brazil)")
 
 
 def reset_cancel() -> None:
@@ -86,20 +95,20 @@ def classify_error(exc: Exception) -> tuple[str, str]:
     if isinstance(exc, urllib.error.HTTPError):
         code = exc.code
         if code in (401, 403):
-            return "auth", "Chave inválida ou expirada. Abra o centro de comando (Ctrl+Alt+C)."
+            return "auth", i18n.tr("err.auth")
         if code == 429:
-            return "quota", "Cota esgotada. Troque de provedor/modelo no centro de comando."
+            return "quota", i18n.tr("err.quota")
         if code == 404:
-            return "model", "Modelo ou endpoint não encontrado. Confira base URL e modelo."
+            return "model", i18n.tr("err.model")
         if code == 400:
-            return "request", "O provedor recusou o request: modelo sem visão ou parâmetro inválido."
+            return "request", i18n.tr("err.request")
         if 500 <= code < 600:
-            return "server", f"Provedor instável (HTTP {code}). Tente de novo."
-        return "http", f"HTTP {code}."
+            return "server", i18n.tr("err.server", code=code)
+        return "http", i18n.tr("err.http", code=code)
     if isinstance(exc, urllib.error.URLError):
-        return "network", "Sem conexão com o provedor. Confira a rede e a base URL."
+        return "network", i18n.tr("err.network")
     if isinstance(exc, TimeoutError):
-        return "timeout", "Tempo esgotado. Tente de novo ou use um modelo mais rápido."
+        return "timeout", i18n.tr("err.timeout")
     return "unknown", str(exc)[:140]
 
 
@@ -148,10 +157,10 @@ def test_vision(base_url: str, model: str, api_key: str) -> tuple[bool, str, flo
         latency = time.time() - t0
         low = text.lower()
         if "red" in low and "blue" in low:
-            return True, "visão OK: confirmou vermelho e azul", latency
+            return True, i18n.tr("test.ok"), latency
         if text:
-            return False, f"respondeu, mas não confirmou as cores: {text[:60]}", latency
-        return False, "resposta vazia", latency
+            return False, i18n.tr("test.wrong_colors", text=text[:60]), latency
+        return False, i18n.tr("test.empty"), latency
     except Exception as exc:  # noqa: BLE001
         return False, classify_error(exc)[1], time.time() - t0
 VALID_KINDS = ("alerta", "acao", "item", "info")
@@ -263,7 +272,11 @@ def analyze_screenshot(image: Image.Image) -> tuple[str, list[dict]]:
         return ERROR_CONTEXT, []
     session.touch()
     b64_img = encode_image_to_base64(image)
-    system_prompt = get_system_prompt()
+    system_prompt = (
+        get_system_prompt()
+        + f"\n\nRESPONSE LANGUAGE: {RESPONSE_LANGUAGE}. "
+        "Follow this language over any earlier language instruction."
+    )
     memory_summary = session.get_context_summary()
 
     user_instructions = (
@@ -361,7 +374,11 @@ def ask_followup(
     image: Image.Image, context_insight: dict | None, question: str
 ) -> str:
     session.touch()
-    target_label = context_insight.get("label", "Geral") if context_insight else "Geral"
+    target_label = (
+        context_insight.get("label", i18n.tr("overlay.general"))
+        if context_insight
+        else i18n.tr("overlay.general")
+    )
 
     if DEMO:
         time.sleep(0.8)
@@ -393,7 +410,7 @@ def ask_followup(
         user_prompt += f"{memory_summary}\n\n"
     user_prompt += (
         "DIRETRIZ DE RESPOSTA:\n"
-        "- Responda de forma ULTRA DIRETA, SIMPLES e MASTIGADA em Português do Brasil.\n"
+        f"- Responda de forma ULTRA DIRETA, SIMPLES e MASTIGADA em {RESPONSE_LANGUAGE}.\n"
         "- Máximo de 2 a 3 frases curtas.\n"
         "- Vá direto ao ponto: diga o que escolher, o que fazer ou a resposta exata sem enrolação nem jargões.\n"
         "- Nunca inclua notas de raciocínio, entregue apenas o texto final."
@@ -401,7 +418,8 @@ def ask_followup(
 
     system_instruction = (
         "Você é o Spectra. Sua missão é dar respostas mastigadas, práticas e instantâneas ao usuário. "
-        "Sem enrolação, sem parágrafos longos, direto ao que ele precisa fazer ou entender."
+        "Sem enrolação, sem parágrafos longos, direto ao que ele precisa fazer ou entender. "
+        f"Respond in {RESPONSE_LANGUAGE}."
     )
 
     payload = {
@@ -463,7 +481,7 @@ def ask_followup(
                 }
             )
             if was_cancelled():
-                return "Cancelado."
+                return i18n.tr("main.canceled")
             session.record_interaction(question, content, target_label)
             return content
     except Exception as e:
