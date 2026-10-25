@@ -51,7 +51,7 @@ No server, no telemetry. The screenshot goes only to the endpoint **you** config
 - Multi-monitor aware (X11), with a safe side-column fallback when the model’s box is bad.
 - Bring your own key: any OpenAI-compatible vision model.
 - Local models via Ollama.
-- 55 unit tests.
+- 57 unit tests.
 
 ## Requirements
 

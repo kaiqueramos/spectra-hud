@@ -25,6 +25,16 @@ cards, the scan indicator and the prompt.
 | **Sand** | warm desert | terracotta |
 | **Mono** | stark white | signal red |
 
+## Typography
+
+The command center uses the best installed combination and falls back safely:
+
+- Display: **Share Tech Mono** → FiraCode Nerd Font → DejaVu Sans.
+- Mono/labels: **FiraCode Nerd Font Mono** → JetBrains Mono → Ubuntu Mono → DejaVu Sans Mono.
+- Body: **Ubuntu** → Noto Sans → Inter → DejaVu Sans.
+
+Dim labels were tuned for roughly 4.5:1 contrast on light and dark backgrounds.
+
 ## Notes
 
 - Light themes keep dark text on light cards; the target bar uses the accent.

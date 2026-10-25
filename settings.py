@@ -11,14 +11,35 @@ import mss
 
 import ai_client
 import config
+import fonts
 import theme
 
-MONO = ("DejaVu Sans Mono", 9)
-MONO_S = ("DejaVu Sans Mono", 8)
-MONO_B = ("DejaVu Sans Mono", 9, "bold")
-BODY = ("DejaVu Sans", 10)
-BODY_B = ("DejaVu Sans", 10, "bold")
-DISPLAY = ("DejaVu Sans Condensed", 20, "bold")
+# Defaults seguros; _apply_fonts() troca pelas melhores fontes instaladas
+# quando a janela Tk já existe.
+MONO = ("DejaVu Sans Mono", 10)
+MONO_S = ("DejaVu Sans Mono", 9)
+MONO_B = ("DejaVu Sans Mono", 10, "bold")
+BODY = ("DejaVu Sans", 11)
+BODY_S = ("DejaVu Sans", 9)
+BODY_B = ("DejaVu Sans", 11, "bold")
+DISPLAY = ("DejaVu Sans Condensed", 22)
+DISPLAY_S = ("DejaVu Sans Condensed", 13)
+
+
+def _apply_fonts() -> None:
+    global MONO, MONO_S, MONO_B, BODY, BODY_S, BODY_B, DISPLAY, DISPLAY_S
+    try:
+        f = fonts.resolve()
+    except Exception:
+        return
+    MONO = f["mono"]
+    MONO_S = f["mono_s"]
+    MONO_B = f["mono_b"]
+    BODY = f["body"]
+    BODY_S = f["body_s"]
+    BODY_B = f["body_b"]
+    DISPLAY = f["display"]
+    DISPLAY_S = f["display_s"]
 
 
 class CommandCenter:
@@ -29,6 +50,7 @@ class CommandCenter:
         on_quit: Callable[[], None],
         first_run: bool = False,
     ):
+        _apply_fonts()
         self.root = root
         self.on_saved = on_saved
         self.on_quit = on_quit
@@ -67,7 +89,7 @@ class CommandCenter:
         self.win.title("Spectra HUD — Command Center")
         self.win.configure(bg=theme.current()["bg"])
         self.win.attributes("-topmost", True)
-        self.win.minsize(900, 760)
+        self.win.minsize(900, 820)
         self.win.protocol("WM_DELETE_WINDOW", self.close)
         self.win.bind("<Escape>", lambda _e: self.close())
         self.win.bind("<Control-s>", lambda _e: self.save())
@@ -75,7 +97,7 @@ class CommandCenter:
         self.win.bind("<Control-t>", lambda _e: self._cycle_theme())
 
         mon = self._target_monitor()
-        w, h = 1060, 860
+        w, h = 1060, 900
         x = mon["left"] + max(10, (mon["width"] - w) // 2)
         y = mon["top"] + max(20, (mon["height"] - h) // 2)
         self.win.geometry(f"{w}x{h}+{x}+{y}")
@@ -479,18 +501,18 @@ class CommandCenter:
         preview.create_rectangle(24, 28, 286, 120, fill=t["card"], outline=t["card_line"])
         preview.create_rectangle(24, 28, 286, 48, fill=t["header"], outline=t["card_line"])
         preview.create_rectangle(24, 28, 28, 120, fill=t["accent"], outline="")
-        preview.create_text(38, 38, text="ALERTA", fill=t["accent"], font=("DejaVu Sans Mono", 6), anchor="w")
-        preview.create_text(276, 38, text="01", fill=t["dim"], font=("DejaVu Sans Mono", 6), anchor="e")
+        preview.create_text(38, 38, text="ALERTA", fill=t["accent"], font=(MONO_S[0], 6), anchor="w")
+        preview.create_text(276, 38, text="01", fill=t["dim"], font=(MONO_S[0], 6), anchor="e")
         preview.create_text(
             38,
             64,
             text="O retorno sai antes do commit.\nO ledger nunca é gravado.",
             fill=t["text"],
-            font=("DejaVu Sans", 8),
+            font=BODY_S,
             anchor="nw",
         )
         preview.create_text(
-            38, 106, text="CLIQUE P/ PERGUNTAR", fill=t["dim"], font=("DejaVu Sans Mono", 5), anchor="w"
+            38, 106, text="CLIQUE P/ PERGUNTAR", fill=t["dim"], font=(MONO_S[0], 5), anchor="w"
         )
         preview.create_text(
             24,
@@ -540,7 +562,7 @@ class CommandCenter:
             highlightbackground=t["accent"] if selected else t["line"],
             relief="flat",
             anchor="w",
-            font=("DejaVu Sans", 8),
+            font=BODY_S,
             padx=8,
             pady=4,
             cursor="hand2",

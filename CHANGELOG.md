@@ -18,11 +18,12 @@ First public release.
 - Safe side-column fallback when the model's box is unreliable.
 - Rotating local logs and actionable 401/403/429/404 messages.
 - 10 themes (5 dark, 5 light), live preview in the command center, `Ctrl+T` cycle.
+- Command-center typography: Share Tech Mono for display, FiraCode NF for mono, Ubuntu for body, with DejaVu fallback; higher-contrast dim labels.
 - 1-hour sliding session memory.
 - Multi-monitor capture on X11.
 - Bring-your-own-key configuration via `.env` or environment variables.
 - Apache 2.0 license.
-- 55 unit tests.
+- 57 unit tests.
 - Fail-fast on Wayland with a clear message.
 - Single-instance lock.
 - Thread-safe follow-up results (no Tk calls from worker threads).
