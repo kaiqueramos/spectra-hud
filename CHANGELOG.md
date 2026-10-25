@@ -7,6 +7,7 @@ First public release.
 - Global scan hotkey with toggle and scanning indicator.
 - Vision model returns up to 3 insights with optional `box_2d` anchoring.
 - Draggable cards, click-to-ask follow-up, global command bar.
+- Target highlight is a single left bar; no box and no numbered badge.
 - 1-hour sliding session memory.
 - Multi-monitor capture on X11.
 - Bring-your-own-key configuration via `.env` or environment variables.

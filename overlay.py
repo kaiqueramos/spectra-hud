@@ -369,53 +369,34 @@ def _make_edge_window(parent_root, x: int, y: int, w: int, h: int, color: str):
 
 
 class ElementHighlight:
-    """Moldura fina na cor do tipo + selo numerado em volta do elemento apontado pelo card."""
+    """Linha única sob o elemento alvo. Sem moldura, sem selo."""
 
-    THICKNESS = 2
-    BADGE_W = 24
-    BADGE_H = 18
+    THICKNESS = 3
 
     def __init__(
         self,
         parent_root,
-        index: int,
         kind: str | None,
         rect: tuple[int, int, int, int],
-        on_click_callback,
-        top_limit: int = 0,
+        monitor: dict,
     ):
         style = get_kind_style(kind)
         accent = style["accent"]
         x, y, w, h = rect
         t = self.THICKNESS
 
-        edges = [
-            (x, y, w, t),  # topo
-            (x, y + h - t, w, t),  # base
-            (x, y, t, h),  # esquerda
-            (x + w - t, y, t, h),  # direita
-        ]
-        self.wins = [
-            _make_edge_window(parent_root, ex, ey, ew, eh, accent)
-            for ex, ey, ew, eh in edges
-        ]
-
-        # Selo numerado acima do canto superior esquerdo (ou dentro, se não houver espaço).
-        by = y - self.BADGE_H if y - self.BADGE_H >= top_limit else y
-        badge = _make_edge_window(
-            parent_root, x, by, self.BADGE_W, self.BADGE_H, accent
+        # Barra vertical 4 px à esquerda do elemento: marca sem cercar.
+        mon_left = monitor.get("left", 0)
+        line_x = max(mon_left, x - 4)
+        line = _make_edge_window(
+            parent_root,
+            line_x,
+            y,
+            t,
+            max(h, 24),
+            accent,
         )
-        label = tk.Label(
-            badge,
-            text=str(index),
-            bg=accent,
-            fg="#080A08",
-            font=("DejaVu Sans", 9, "bold"),
-            cursor="hand2",
-        )
-        label.pack(fill="both", expand=True)
-        label.bind("<ButtonRelease-1>", lambda e: on_click_callback(index))
-        self.wins.append(badge)
+        self.wins = [line]
 
     def destroy(self):
         for win in self.wins:
@@ -760,7 +741,6 @@ class JarvisHUDOverlay:
         self.current_image = screenshot_image
         self.is_cards_active = True
 
-        y_offset = monitor_info.get("top", 0)
         placed_rects: list[tuple[int, int, int, int]] = []
 
         for idx, item in enumerate(insights, 1):
@@ -781,11 +761,9 @@ class JarvisHUDOverlay:
                 self.highlights.append(
                     ElementHighlight(
                         self.root,
-                        idx,
                         item.get("kind"),
                         target,
-                        self.open_card_prompt,
-                        top_limit=y_offset,
+                        monitor_info,
                     )
                 )
 
