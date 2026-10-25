@@ -784,3 +784,206 @@ export const SceneTitle: React.FC<{
 export const Divider: React.FC<{ x: number; y: number; w: number }> = ({ x, y, w }) => (
   <div style={{ position: "absolute", left: x, top: y, width: w, height: 1, background: LINE }} />
 );
+
+export const GameScreen: React.FC<{ x: number; y: number; w?: number }> = ({
+  x,
+  y,
+  w = 1400,
+}) => {
+  const h = w * 0.56;
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: x,
+        top: y,
+        width: w,
+        height: h,
+        overflow: "hidden",
+        border: `1px solid #2b3a2e`,
+        background:
+          "radial-gradient(90% 90% at 60% 30%, #1b3028 0%, #0c1712 55%, #070d09 100%)",
+        boxShadow: "0 30px 90px rgba(0,0,0,.55)",
+      }}
+    >
+      <svg width="100%" height="100%" viewBox="0 0 1400 784" style={{ position: "absolute", inset: 0 }}>
+        <path d="M0 520L180 300L330 430L470 230L650 460L820 280L1000 500L1160 340L1400 560V784H0Z" fill="#101f17" />
+        <path d="M0 600L200 420L380 560L520 410L700 610L900 450L1100 640L1260 500L1400 650V784H0Z" fill="#0b1710" />
+        <path d="M520 784L650 500L900 500L1060 784Z" fill="#0f1b14" />
+        <path d="M620 784L710 540L880 540L980 784Z" fill="#15261c" stroke="#2f4636" strokeWidth="2" />
+        <circle cx="820" cy="400" r="90" fill="#1c3227" />
+        <circle cx="820" cy="400" r="52" fill="#0a1410" stroke="#ffb347" strokeWidth="2" />
+        <path d="M790 390L810 450L830 390" stroke="#ffb347" strokeWidth="4" fill="none" />
+        <path d="M760 520L820 460L880 520" stroke="#5d7a59" strokeWidth="6" fill="none" />
+      </svg>
+      <div
+        style={{
+          position: "absolute",
+          left: 34,
+          top: 30,
+          fontFamily: COND,
+          fontSize: 26,
+          letterSpacing: "0.12em",
+          color: BONE,
+        }}
+      >
+        ASHFALL <span style={{ color: DIM }}>/ NIGHTFALL</span>
+      </div>
+      <div style={{ position: "absolute", right: 36, top: 30, textAlign: "right", fontFamily: MONO, fontSize: 11, color: DIM }}>
+        LVL 14 · 02:41 AM
+      </div>
+      <div style={{ position: "absolute", left: 36, top: 78, width: 330 }}>
+        {[
+          ["HP", "72%", "#c4543a"],
+          ["MP", "48%", "#4f8fa8"],
+        ].map(([label, value, color]) => (
+          <div key={label} style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 7 }}>
+            <span style={{ fontFamily: MONO, fontSize: 10, color: DIM, width: 22 }}>{label}</span>
+            <div style={{ height: 8, flex: 1, background: "#15221a", border: "1px solid #2b3a2e" }}>
+              <div style={{ height: "100%", width: value, background: color }} />
+            </div>
+            <span style={{ fontFamily: MONO, fontSize: 9, color: DIM }}>{value}</span>
+          </div>
+        ))}
+      </div>
+      <div
+        style={{
+          position: "absolute",
+          right: 36,
+          top: 78,
+          width: 130,
+          height: 130,
+          borderRadius: "50%",
+          border: "1px solid #3a5541",
+          background: "radial-gradient(circle at 40% 40%, #1b3028, #08110c)",
+        }}
+      >
+        <div style={{ position: "absolute", left: 54, top: 54, width: 22, height: 22, borderRadius: "50%", background: SIGNAL, boxShadow: "0 0 16px rgba(255,90,31,.5)" }} />
+        <div style={{ position: "absolute", left: 62, top: 38, width: 1, height: 60, background: "#3a5541" }} />
+        <div style={{ position: "absolute", left: 30, top: 66, width: 70, height: 1, background: "#3a5541" }} />
+      </div>
+      <div
+        style={{
+          position: "absolute",
+          left: 120,
+          right: 120,
+          bottom: 34,
+          border: "1px solid #3a5541",
+          background: "rgba(8,13,10,.94)",
+          padding: "20px 24px",
+          boxShadow: "0 18px 50px rgba(0,0,0,.45)",
+        }}
+      >
+        <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: "0.16em", color: "#ffb347" }}>
+          MERCHANT / RELIC DEALER
+        </div>
+        <div style={{ fontFamily: BODY, fontSize: 25, color: BONE, marginTop: 9 }}>
+          The relic is worth 120 gold. Do we have a deal?
+        </div>
+        <div style={{ display: "flex", gap: 12, marginTop: 17 }}>
+          <div style={{ padding: "9px 18px", border: "1px solid #3a5541", fontFamily: BODY, fontSize: 16, color: DIM }}>
+            Sell · 120g
+          </div>
+          <div style={{ padding: "9px 18px", border: `1px solid ${SIGNAL}`, background: "rgba(255,90,31,.06)", fontFamily: BODY, fontSize: 16, color: SIGNAL }}>
+            Keep it
+          </div>
+        </div>
+      </div>
+      <div style={{ position: "absolute", left: 36, bottom: 34, fontFamily: MONO, fontSize: 10, color: DIM, lineHeight: 1.8 }}>
+        INVENTORY 12/20
+        <br />
+        <span style={{ color: "#ffb347" }}>◆ RELIC OF ASH</span>
+        <br />
+        ◆ IRON KEY
+        <br />
+        ◆ 2 TORCHES
+      </div>
+    </div>
+  );
+};
+
+export const DashboardScreen: React.FC<{ x: number; y: number; w?: number }> = ({
+  x,
+  y,
+  w = 1400,
+}) => {
+  const h = w * 0.56;
+  const f = useCurrentFrame();
+  const dash = interpolate(f, [0, 45], [1, 0], clamp);
+  return (
+    <div
+      style={{
+        position: "absolute",
+        left: x,
+        top: y,
+        width: w,
+        height: h,
+        border: `1px solid #2c323d`,
+        background: "linear-gradient(180deg, #0d1117 0%, #090c11 100%)",
+        boxShadow: "0 30px 90px rgba(0,0,0,.55)",
+        overflow: "hidden",
+      }}
+    >
+      <div
+        style={{
+          height: 52,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          borderBottom: "1px solid #232a34",
+          padding: "0 24px",
+          fontFamily: MONO,
+          fontSize: 12,
+          color: DIM,
+        }}
+      >
+        <span>SPECTRA / CHECKOUT</span>
+        <span>PROD · 14:02 UTC</span>
+      </div>
+      <div style={{ display: "flex", gap: 14, padding: 24 }}>
+        {[
+          ["P99", "1.84s", "#ff6b5a"],
+          ["ERRORS", "4.2%", "#ff6b5a"],
+          ["RPS", "2.4k", "#7fd4ff"],
+        ].map(([label, value, color]) => (
+          <div key={label} style={{ flex: 1, border: "1px solid #232a34", background: "#0b0f15", padding: "14px 16px" }}>
+            <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: "0.16em", color: DIM }}>{label}</div>
+            <div style={{ fontFamily: COND, fontSize: 40, color, marginTop: 3 }}>{value}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ margin: "0 24px", border: "1px solid #232a34", background: "#0a0e14", padding: "12px 10px 0" }}>
+        <svg width="100%" height="300" viewBox="0 0 1300 300" preserveAspectRatio="none">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <line key={i} x1="0" y1={40 + i * 55} x2="1300" y2={40 + i * 55} stroke="#1c232d" strokeWidth="1" />
+          ))}
+          <path
+            d="M0 210 C80 200 140 190 210 205 C290 222 330 170 400 180 C470 190 520 165 590 175 C660 185 700 150 770 160 C840 170 880 140 950 150 C1010 158 1050 135 1090 120 C1130 105 1170 135 1300 30"
+            fill="none"
+            stroke="#7fd4ff"
+            strokeWidth="2.5"
+            strokeDasharray="1800"
+            strokeDashoffset={1800 * dash}
+          />
+          <line x1="1090" y1="0" x2="1090" y2="300" stroke={SIGNAL} strokeWidth="1" strokeDasharray="4 5" opacity=".7" />
+          <circle cx="1090" cy="120" r="5" fill={SIGNAL} />
+        </svg>
+        <div style={{ position: "absolute", left: 0, right: 0, bottom: 0 }} />
+      </div>
+      <div style={{ position: "absolute", right: 36, top: 66, fontFamily: MONO, fontSize: 10, color: SIGNAL, letterSpacing: "0.12em" }}>
+        SPIKE / 14:02
+      </div>
+      <div style={{ position: "absolute", left: 24, right: 24, bottom: 22, display: "flex", gap: 10 }}>
+        {[
+          ["build 4821", "deployed 13:58", "#ff6b5a"],
+          ["build 4820", "stable 42m", "#7a8276"],
+          ["rollback", "1 click", "#7fd4ff"],
+        ].map(([a, b, color]) => (
+          <div key={a} style={{ flex: 1, border: "1px solid #232a34", padding: "9px 12px", fontFamily: MONO, fontSize: 10, color }}>
+            {a} <span style={{ color: DIM }}>/ {b}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};

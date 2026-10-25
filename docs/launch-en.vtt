@@ -1,22 +1,19 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:03.000
-Every screen has a next move.
+00:00:00.000 --> 00:00:02.000
+Introducing Spectra HUD. One hotkey. Any screen.
 
-00:00:03.000 --> 00:00:09.000
-Your screen is the interface.
+00:00:02.000 --> 00:00:07.000
+Code: find the bug. The broken line and the fix, anchored to the editor.
 
-00:00:09.000 --> 00:00:17.000
-One hotkey. Spectra reads the screen and anchors the next move to the exact element.
+00:00:07.000 --> 00:00:12.000
+Game: read the room. The merchant's offer, priced before you click.
 
-00:00:17.000 --> 00:00:23.000
-Your HUD. Your rules. Ten themes, three languages, YAML config.
+00:00:12.000 --> 00:00:17.000
+Ops: spot the spike. The anomaly and the rollback, on one card.
 
-00:00:23.000 --> 00:00:29.000
-No telemetry. No account. Your key stays in the system keyring.
+00:00:17.000 --> 00:00:21.000
+One HUD. Any app. Code, game, ops.
 
-00:00:29.000 --> 00:00:35.000
-Built in public. 61 tests. Open source, Apache 2.0.
-
-00:00:35.000 --> 00:00:40.000
+00:00:21.000 --> 00:00:24.000
 Spectra HUD. Your screen, annotated. kaiqueramos.github.io/spectra-hud

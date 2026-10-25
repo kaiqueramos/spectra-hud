@@ -15,12 +15,10 @@ import {
   BODY,
   COND,
   CodeEditor,
-  CommandCenterImage,
-  Corners,
-  Cursor,
+  DashboardScreen,
   DIM,
-  DialogBox,
   FeatureChip,
+  GameScreen,
   Grid,
   HudCard,
   INK,
@@ -29,10 +27,8 @@ import {
   LINE,
   MONO,
   Mark,
-  QueuePanel,
   SIGNAL,
   ScanSweep,
-  Terminal,
   clamp,
   fade,
 } from "./brand";
@@ -45,30 +41,26 @@ const SceneFade: React.FC<{
   const frame = useCurrentFrame();
   const opacity = interpolate(
     frame,
-    [0, 12, duration - 12, duration],
+    [0, 10, duration - 10, duration],
     [0, 1, 1, 0],
     clamp,
   );
   return <AbsoluteFill style={{ opacity, background }}>{children}</AbsoluteFill>;
 };
 
-const Chapter: React.FC<{ index: string; label: string; color?: string }> = ({
-  index,
-  label,
-  color = DIM,
-}) => (
+const Chapter: React.FC<{ index: string; label: string }> = ({ index, label }) => (
   <div
     style={{
       position: "absolute",
       left: 110,
-      top: 62,
+      top: 58,
       display: "flex",
       alignItems: "center",
       gap: 12,
       fontFamily: MONO,
       fontSize: 11,
       letterSpacing: "0.2em",
-      color,
+      color: DIM,
     }}
   >
     <span style={{ color: SIGNAL }}>{index}</span>
@@ -77,497 +69,292 @@ const Chapter: React.FC<{ index: string; label: string; color?: string }> = ({
   </div>
 );
 
-const Manifesto: React.FC = () => {
+const Caption: React.FC<{ children: React.ReactNode; y?: number }> = ({
+  children,
+  y = 62,
+}) => (
+  <div
+    style={{
+      position: "absolute",
+      left: 110,
+      bottom: y,
+      fontFamily: MONO,
+      fontSize: 12,
+      letterSpacing: "0.14em",
+      color: DIM,
+      textTransform: "uppercase",
+    }}
+  >
+    {children}
+  </div>
+);
+
+const UseTitle: React.FC<{ title: string; sub: string }> = ({ title, sub }) => (
+  <>
+    <div style={{ position: "absolute", left: 110, top: 104 }}>
+      <Kicker>USE CASE</Kicker>
+      <div
+        style={{
+          fontFamily: COND,
+          fontSize: 88,
+          lineHeight: 0.88,
+          color: BONE,
+          textTransform: "uppercase",
+          marginTop: 10,
+        }}
+      >
+        {title}
+      </div>
+      <div style={{ fontFamily: BODY, fontSize: 20, color: DIM, marginTop: 10 }}>
+        {sub}
+      </div>
+    </div>
+  </>
+);
+
+const Hook: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
-  const lines = ["EVERY SCREEN", "HAS A NEXT MOVE."];
+  const p = spring({ frame: frame - 4, fps, config: { damping: 18, stiffness: 100 } });
   return (
     <AbsoluteFill style={{ background: INK }}>
       <Grid opacity={0.2} />
-      <div style={{ position: "absolute", left: 118, top: 108 }}>
+      <div style={{ position: "absolute", left: 118, top: 122 }}>
         <Kicker>INTRODUCING SPECTRA HUD</Kicker>
       </div>
       <div
         style={{
           position: "absolute",
           left: 110,
-          top: 180,
+          top: 190,
           fontFamily: COND,
-          fontSize: 154,
-          lineHeight: 0.88,
-          letterSpacing: "-0.015em",
-          color: BONE,
-          textTransform: "uppercase",
-        }}
-      >
-        {lines.map((line, li) => (
-          <div key={line} style={{ display: "flex", gap: 18 }}>
-            {line.split(" ").map((word, wi) => {
-              const p = spring({
-                frame: frame - 5 - li * 10 - wi * 4,
-                fps,
-                config: { damping: 18, stiffness: 110, mass: 0.7 },
-              });
-              return (
-                <span
-                  key={wi}
-                  style={{
-                    display: "inline-block",
-                    opacity: p,
-                    transform: `translateY(${(1 - p) * 70}px)`,
-                  }}
-                >
-                  {word}
-                </span>
-              );
-            })}
-          </div>
-        ))}
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          left: 118,
-          bottom: 170,
-          fontFamily: BODY,
-          fontSize: 25,
-          color: DIM,
-          opacity: fade(frame, 38, 55),
-        }}
-      >
-        The interface was never the app.
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          left: 110,
-          bottom: 108,
-          display: "flex",
-          gap: 10,
-          opacity: fade(frame, 25, 45),
-        }}
-      >
-        <FeatureChip active>LINUX / X11</FeatureChip>
-        <FeatureChip>OPEN SOURCE</FeatureChip>
-        <FeatureChip>BRING YOUR OWN KEY</FeatureChip>
-      </div>
-      <div style={{ position: "absolute", right: 130, top: 190, opacity: 0.09 }}>
-        <Mark size={420} />
-      </div>
-      <ScanSweep top={interpolate(frame, [0, 90], [180, 880], clamp)} opacity={0.35} />
-    </AbsoluteFill>
-  );
-};
-
-const TypeReveal: React.FC = () => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const p1 = spring({ frame: frame - 4, fps, config: { damping: 20, stiffness: 90 } });
-  const p2 = spring({ frame: frame - 18, fps, config: { damping: 20, stiffness: 90 } });
-  return (
-    <AbsoluteFill style={{ background: INK }}>
-      <Grid opacity={0.12} />
-      <div style={{ position: "absolute", inset: 0, opacity: 0.16 }}>
-        <CodeEditor x={-140} y={210} w={1500} h={760} scan={0} highlight={0.25} />
-      </div>
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, #080a08 0%, rgba(8,10,8,.94) 48%, rgba(8,10,8,.25) 100%)" }} />
-      <Chapter index="02" label="THE SCREEN" />
-      <div
-        style={{
-          position: "absolute",
-          left: 108,
-          top: 230,
-          fontFamily: COND,
-          fontSize: 188,
+          fontSize: 164,
           lineHeight: 0.84,
           letterSpacing: "-0.02em",
           color: BONE,
           textTransform: "uppercase",
+          opacity: p,
+          transform: `translateY(${(1 - p) * 30}px)`,
         }}
       >
-        <div style={{ opacity: p1, transform: `translateX(${(1 - p1) * -80}px)` }}>
-          YOUR SCREEN.
-        </div>
-        <div style={{ opacity: p2, transform: `translateX(${(1 - p2) * -80}px)`, color: SIGNAL }}>
-          IS THE INTERFACE.
-        </div>
+        One hotkey.
+        <br />
+        <span style={{ color: SIGNAL }}>Any screen.</span>
       </div>
       <div
         style={{
           position: "absolute",
           left: 118,
-          top: 650,
-          fontFamily: BODY,
-          fontSize: 29,
-          color: DIM,
-          maxWidth: 560,
-          opacity: fade(frame, 36, 52),
-        }}
-      >
-        No copy. No paste. No tab hunting. Spectra reads what is on screen and puts the next move where it belongs.
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          left: 118,
-          bottom: 120,
+          bottom: 150,
           display: "flex",
-          gap: 10,
-          opacity: fade(frame, 52, 66),
+          gap: 9,
+          opacity: fade(frame, 12, 24),
         }}
       >
+        <FeatureChip active>01 / CODE</FeatureChip>
+        <FeatureChip active>02 / GAME</FeatureChip>
+        <FeatureChip active>03 / OPS</FeatureChip>
+      </div>
+      <div style={{ position: "absolute", right: 120, top: 170, opacity: 0.09 }}>
+        <Mark size={460} />
+      </div>
+      <ScanSweep top={interpolate(frame, [0, 60], [180, 940], clamp)} opacity={0.3} />
+    </AbsoluteFill>
+  );
+};
+
+const CodeCase: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const scan = interpolate(frame, [16, 24, 66, 74], [0, 1, 1, 0], clamp);
+  const scanY = interpolate(frame, [16, 72], [300, 850], clamp);
+  const p = spring({ frame: frame - 4, fps, config: { damping: 20, stiffness: 90 } });
+  return (
+    <AbsoluteFill style={{ background: INK }}>
+      <Grid opacity={0.1} />
+      <Chapter index="01" label="CODE" />
+      <UseTitle title="Find the bug." sub="A real editor. The broken line, anchored." />
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          opacity: p,
+          transform: `translateY(${(1 - p) * 24}px)`,
+        }}
+      >
+        <CodeEditor x={110} y={300} w={1080} h={560} scan={scan} />
+        <HudCard
+          x={1230}
+          y={300}
+          w={430}
+          tag="ALERT"
+          title="EARLY RETURN BUG"
+          body="The return happens before the commit. Fix line 42 before retrying."
+          delay={28}
+          index="01"
+        />
+        <ScanSweep top={scanY} opacity={scan * 0.8} />
+      </div>
+      <Caption>ONE SCAN · THE LINE · THE FIX · 7.5S</Caption>
+    </AbsoluteFill>
+  );
+};
+
+const GameCase: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const p = spring({ frame: frame - 4, fps, config: { damping: 20, stiffness: 90 } });
+  return (
+    <AbsoluteFill style={{ background: INK }}>
+      <Grid opacity={0.1} />
+      <Chapter index="02" label="GAME" />
+      <UseTitle title="Read the room." sub="A dialogue choice. The cost, before you click." />
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          opacity: p,
+          transform: `translateY(${(1 - p) * 24}px)`,
+        }}
+      >
+        <GameScreen x={110} y={300} w={1250} />
+        <HudCard
+          x={1390}
+          y={300}
+          w={430}
+          tag="ACTION"
+          title="DON'T SELL THE RELIC"
+          body="The merchant pays 120g. The quest still needs it. Keep it."
+          color={BONE}
+          delay={28}
+          index="02"
+        />
+      </div>
+      <Caption>THE DIALOGUE SAYS 120G · THE CARD SAYS WHAT IT COSTS</Caption>
+    </AbsoluteFill>
+  );
+};
+
+const OpsCase: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const p = spring({ frame: frame - 4, fps, config: { damping: 20, stiffness: 90 } });
+  return (
+    <AbsoluteFill style={{ background: INK }}>
+      <Grid opacity={0.1} />
+      <Chapter index="03" label="OPS" />
+      <UseTitle title="Spot the spike." sub="A dashboard. The anomaly, named." />
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          opacity: p,
+          transform: `translateY(${(1 - p) * 24}px)`,
+        }}
+      >
+        <DashboardScreen x={110} y={300} w={1250} />
+        <HudCard
+          x={1390}
+          y={300}
+          w={430}
+          tag="ALERT"
+          title="CHECKOUT P99"
+          body="Spike starts at 14:02. Roll back build 4821."
+          delay={28}
+          index="03"
+        />
+      </div>
+      <Caption>THE SPIKE STARTED AT 14:02 · ROLLBACK 4821</Caption>
+    </AbsoluteFill>
+  );
+};
+
+const Montage: React.FC = () => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const p = spring({ frame: frame - 4, fps, config: { damping: 20, stiffness: 80 } });
+  const screens = [
+    {
+      label: "CODE",
+      node: <CodeEditor x={0} y={0} w={1080} h={560} scan={0} />,
+      scale: 0.42,
+      left: 110,
+    },
+    {
+      label: "GAME",
+      node: <GameScreen x={0} y={0} w={1250} />,
+      scale: 0.36,
+      left: 690,
+    },
+    {
+      label: "OPS",
+      node: <DashboardScreen x={0} y={0} w={1250} />,
+      scale: 0.36,
+      left: 1270,
+    },
+  ];
+  return (
+    <AbsoluteFill style={{ background: INK }}>
+      <Grid opacity={0.13} />
+      <div style={{ position: "absolute", left: 110, top: 110 }}>
+        <Kicker>ONE HUD / ANY APP</Kicker>
+        <div
+          style={{
+            fontFamily: COND,
+            fontSize: 112,
+            lineHeight: 0.88,
+            color: BONE,
+            textTransform: "uppercase",
+            marginTop: 12,
+          }}
+        >
+          Any screen.
+          <br />
+          <span style={{ color: SIGNAL }}>One hotkey.</span>
+        </div>
+      </div>
+      {screens.map((screen) => (
+        <div
+          key={screen.label}
+          style={{
+            position: "absolute",
+            left: screen.left,
+            top: 410,
+            width: 460,
+            height: 300,
+            overflow: "hidden",
+            border: `1px solid ${LINE}`,
+            background: "#0a0d09",
+            opacity: p,
+            transform: `translateY(${(1 - p) * 28}px)`,
+          }}
+        >
+          <div style={{ position: "absolute", transform: `scale(${screen.scale})`, transformOrigin: "top left", width: 1250 }}>
+            {screen.node}
+          </div>
+          <div
+            style={{
+              position: "absolute",
+              left: 12,
+              bottom: 10,
+              fontFamily: MONO,
+              fontSize: 11,
+              letterSpacing: "0.16em",
+              color: SIGNAL,
+            }}
+          >
+            {screen.label}
+          </div>
+        </div>
+      ))}
+      <div style={{ position: "absolute", left: 110, bottom: 90, display: "flex", gap: 10 }}>
         <Keycap active>CTRL</Keycap>
         <span style={{ color: DIM, fontFamily: MONO, alignSelf: "center" }}>+</span>
         <Keycap active>ALT</Keycap>
         <span style={{ color: DIM, fontFamily: MONO, alignSelf: "center" }}>+</span>
         <Keycap active>SPACE</Keycap>
       </div>
-      <div style={{ position: "absolute", right: 120, top: 280, opacity: 0.07 }}>
-        <Mark size={380} />
-      </div>
-      <ScanSweep top={interpolate(frame, [0, 180], [130, 980], clamp)} opacity={0.22} />
-    </AbsoluteFill>
-  );
-};
-
-const ProductDemo: React.FC = () => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const zoom = interpolate(frame, [0, 240], [1.0, 1.05], clamp);
-  const scan = interpolate(frame, [12, 20, 74, 82], [0, 1, 1, 0], clamp);
-  const scanY = interpolate(frame, [12, 78], [190, 900], clamp);
-  const title = spring({ frame: frame - 4, fps, config: { damping: 20, stiffness: 90 } });
-  const click = interpolate(frame, [140, 148, 168], [0, 1, 0], clamp);
-  return (
-    <AbsoluteFill style={{ background: INK }}>
-      <Grid opacity={0.12} />
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          transform: `scale(${zoom}) translateX(-10px)`,
-          transformOrigin: "58% 55%",
-        }}
-      >
-        <CodeEditor x={620} y={250} w={800} h={520} scan={scan} />
-        <DialogBox x={1500} y={700} w={360} opacity={fade(frame, 25, 45)} />
-        <QueuePanel x={610} y={820} w={470} />
-        <HudCard
-          x={1450}
-          y={165}
-          w={390}
-          tag="ALERT"
-          title="EARLY RETURN BUG"
-          body="The return happens before the commit. The settlement is never saved."
-          delay={46}
-          index="01"
-        />
-        <HudCard
-          x={1450}
-          y={440}
-          w={390}
-          tag="ACTION"
-          title="DON'T RETRY"
-          body="Retry reruns the same broken path. Cancel and fix the return first."
-          color={BONE}
-          delay={72}
-          index="02"
-        />
-        <HudCard
-          x={1080}
-          y={820}
-          w={390}
-          tag="ITEM"
-          title="QUEUE BACKING UP"
-          body="#1043 keeps failing on the same settle path."
-          color="#a8b894"
-          delay={98}
-          index="03"
-        />
-        <ScanSweep top={scanY} opacity={scan} />
-        <Cursor x={1330} y={500} click={click} />
-      </div>
-      <Chapter index="03" label="THE HUD" />
-      <div style={{ position: "absolute", left: 108, top: 118, opacity: title }}>
-        <Kicker>ONE SCAN / THREE ANCHORS</Kicker>
-        <div
-          style={{
-            fontFamily: COND,
-            fontSize: 96,
-            lineHeight: 0.88,
-            color: BONE,
-            textTransform: "uppercase",
-            marginTop: 14,
-          }}
-        >
-          One hotkey.
-          <br />
-          Three moves.
-        </div>
-        <div style={{ fontFamily: BODY, fontSize: 22, color: DIM, marginTop: 14, maxWidth: 430 }}>
-          Each card knows where it belongs. Click one to ask. Drag it if it is in the way.
-        </div>
-        <div style={{ display: "flex", gap: 9, marginTop: 24 }}>
-          <FeatureChip active>ANCHORED</FeatureChip>
-          <FeatureChip>CANCELABLE</FeatureChip>
-          <FeatureChip>FOLLOW-UP</FeatureChip>
-        </div>
-      </div>
-    </AbsoluteFill>
-  );
-};
-
-const Command: React.FC = () => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const p = spring({ frame: frame - 4, fps, config: { damping: 20, stiffness: 80 } });
-  const toPaper = fade(frame, 64, 92);
-  return (
-    <AbsoluteFill style={{ background: INK }}>
-      <Grid opacity={0.1} />
-      <Chapter index="04" label="THE CONTROL ROOM" />
-      <div style={{ position: "absolute", left: 108, top: 170 }}>
-        <div
-          style={{
-            fontFamily: COND,
-            fontSize: 126,
-            lineHeight: 0.85,
-            color: BONE,
-            textTransform: "uppercase",
-            opacity: p,
-            transform: `translateY(${(1 - p) * 35}px)`,
-          }}
-        >
-          YOUR HUD.
-          <br />
-          <span style={{ color: SIGNAL }}>YOUR RULES.</span>
-        </div>
-        <div style={{ fontFamily: BODY, fontSize: 24, color: DIM, marginTop: 24, maxWidth: 760 }}>
-          Ten themes. Three languages. A YAML file for every setting. A command center that stays out of your way.
-        </div>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-start",
-            gap: 9,
-            marginTop: 36,
-          }}
-        >
-          <FeatureChip active>10 THEMES / 5 DARK / 5 LIGHT</FeatureChip>
-          <FeatureChip active>PT-BR · EN · ES</FeatureChip>
-          <FeatureChip active>YAML / RELOAD</FeatureChip>
-          <FeatureChip>TRAY / HOTKEYS / TELEMETRY</FeatureChip>
-        </div>
-      </div>
-
-      <div
-        style={{
-          position: "absolute",
-          right: 96,
-          top: 104,
-          width: 820,
-          height: 900,
-          opacity: p,
-          transform: `translateY(${(1 - p) * 30}px) scale(${0.98 + p * 0.02})`,
-        }}
-      >
-        <CommandCenterImage
-          src="command-center-spectra.png"
-          x={0}
-          y={0}
-          w={800}
-          opacity={1 - toPaper}
-        />
-        <CommandCenterImage
-          src="command-center-paper.png"
-          x={0}
-          y={0}
-          w={800}
-          opacity={toPaper}
-        />
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          right: 120,
-          bottom: 74,
-          fontFamily: MONO,
-          fontSize: 11,
-          letterSpacing: "0.18em",
-          color: DIM,
-        }}
-      >
-        {toPaper > 0.5 ? "PAPER / LIGHT / 01 OF 10" : "SPECTRA / DARK / 01 OF 10"}
-      </div>
-    </AbsoluteFill>
-  );
-};
-
-const Shield: React.FC<{ frame: number; fps: number }> = ({ frame, fps }) => {
-  const p = spring({ frame: frame - 4, fps, config: { damping: 18, stiffness: 80 } });
-  const dash = interpolate(frame, [10, 55], [0, 1], clamp);
-  return (
-    <svg width={430} height={500} viewBox="0 0 430 500" style={{ opacity: p, transform: `translateY(${(1 - p) * 40}px)` }}>
-      <path
-        d="M215 24l158 58v144c0 108-64 196-158 250C121 422 57 334 57 226V82l158-58z"
-        fill="rgba(255,90,31,.045)"
-        stroke={SIGNAL}
-        strokeWidth="1.5"
-        strokeDasharray="900"
-        strokeDashoffset={900 * (1 - dash)}
-      />
-      <path
-        d="M215 68l118 43v115c0 82-47 149-118 193-71-44-118-111-118-193V111l118-43z"
-        fill="none"
-        stroke="rgba(255,90,31,.35)"
-        strokeWidth="1"
-      />
-      <rect x="170" y="218" width="90" height="78" rx="6" fill="none" stroke={BONE} strokeWidth="2" />
-      <path d="M188 218v-18a27 27 0 0154 0v18" fill="none" stroke={BONE} strokeWidth="2" />
-      <circle cx="215" cy="252" r="7" fill={SIGNAL} />
-      <path d="M215 259v18" stroke={SIGNAL} strokeWidth="2" />
-    </svg>
-  );
-};
-
-const Trust: React.FC = () => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  return (
-    <AbsoluteFill style={{ background: INK }}>
-      <Grid opacity={0.12} />
-      <Chapter index="05" label="THE BOUNDARY" />
-      <div style={{ position: "absolute", left: 108, top: 150 }}>
-        <Kicker>PRIVACY / BY DESIGN</Kicker>
-        <div
-          style={{
-            fontFamily: COND,
-            fontSize: 138,
-            lineHeight: 0.84,
-            color: BONE,
-            textTransform: "uppercase",
-            marginTop: 18,
-          }}
-        >
-          No telemetry.
-          <br />
-          No account.
-          <br />
-          <span style={{ color: SIGNAL }}>Your key.</span>
-        </div>
-        <div style={{ fontFamily: BODY, fontSize: 24, color: DIM, marginTop: 26, maxWidth: 620 }}>
-          Your screenshot goes only to the provider you choose. The key stays in the system keyring. Local models are one preset away.
-        </div>
-        <div style={{ display: "flex", gap: 9, marginTop: 34, flexWrap: "wrap", maxWidth: 760 }}>
-          <FeatureChip active>CONSENT FIRST</FeatureChip>
-          <FeatureChip active>PRIVATE MODE</FeatureChip>
-          <FeatureChip active>WINDOW BLOCKLIST</FeatureChip>
-          <FeatureChip>KEYRING</FeatureChip>
-          <FeatureChip>LOCAL MODELS</FeatureChip>
-        </div>
-      </div>
-      <div style={{ position: "absolute", right: 170, top: 240 }}>
-        <Shield frame={frame} fps={fps} />
-        <div
-          style={{
-            position: "absolute",
-            left: -38,
-            right: -38,
-            bottom: 8,
-            textAlign: "center",
-            fontFamily: MONO,
-            fontSize: 11,
-            lineHeight: 1.8,
-            letterSpacing: "0.14em",
-            color: DIM,
-          }}
-        >
-          NO SPECTRA SERVER
-          <br />
-          <span style={{ color: BONE }}>ONLY THE PROVIDER YOU POINT AT</span>
-        </div>
-      </div>
-    </AbsoluteFill>
-  );
-};
-
-const Proof: React.FC = () => {
-  const frame = useCurrentFrame();
-  const count = Math.round(interpolate(frame, [10, 55], [0, 61], clamp));
-  const p = spring({ frame: frame - 4, fps: 30, config: { damping: 20, stiffness: 80 } });
-  return (
-    <AbsoluteFill style={{ background: INK }}>
-      <Grid opacity={0.12} />
-      <Chapter index="06" label="THE RECEIPTS" />
-      <div style={{ position: "absolute", left: 108, top: 132 }}>
-        <Kicker>OPEN SOURCE / APACHE 2.0</Kicker>
-        <div
-          style={{
-            fontFamily: COND,
-            fontSize: 126,
-            lineHeight: 0.86,
-            color: BONE,
-            textTransform: "uppercase",
-            marginTop: 14,
-          }}
-        >
-          Built in public.
-          <br />
-          <span style={{ color: SIGNAL }}>Tested in public.</span>
-        </div>
-      </div>
-      <div style={{ position: "absolute", left: 108, top: 460, display: "flex", alignItems: "flex-end", gap: 24 }}>
-        <div
-          style={{
-            fontFamily: COND,
-            fontSize: 300,
-            lineHeight: 0.7,
-            color: SIGNAL,
-            opacity: p,
-            transform: `translateY(${(1 - p) * 30}px)`,
-          }}
-        >
-          {count}
-        </div>
-        <div style={{ fontFamily: MONO, fontSize: 14, letterSpacing: "0.18em", color: DIM, paddingBottom: 22 }}>
-          TESTS
-          <br />
-          PASSING
-        </div>
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          left: 108,
-          bottom: 100,
-          display: "flex",
-          gap: 9,
-          flexWrap: "wrap",
-          maxWidth: 850,
-        }}
-      >
-        <FeatureChip active>APACHE 2.0</FeatureChip>
-        <FeatureChip active>X11 / LINUX</FeatureChip>
-        <FeatureChip>NO TELEMETRY</FeatureChip>
-        <FeatureChip>BRING YOUR OWN KEY</FeatureChip>
-      </div>
-      <div style={{ position: "absolute", right: 110, top: 210, width: 720, opacity: p, transform: `translateY(${(1 - p) * 25}px)` }}>
-        <Terminal
-          x={0}
-          y={0}
-          w={720}
-          lines={[
-            "$ pytest -q",
-            "61 passed in 0.55s",
-            "$ ruff check .",
-            "All checks passed!",
-            "$ git log --oneline -1",
-            "v0.2.1 / security patch",
-            "github.com/kaiqueramos/spectra-hud",
-          ]}
-        />
-      </div>
+      <Caption y={54}>THREE SCREENS · ONE REQUEST PER SCAN · YOUR PROVIDER</Caption>
     </AbsoluteFill>
   );
 };
@@ -576,11 +363,10 @@ const EndCard: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const p = spring({ frame, fps, config: { damping: 20, stiffness: 75 } });
-  const out = interpolate(frame, [128, 150], [1, 0], clamp);
+  const out = interpolate(frame, [78, 90], [1, 0], clamp);
   return (
     <AbsoluteFill style={{ background: INK, opacity: out }}>
       <Grid opacity={0.16} />
-      <Corners />
       <div
         style={{
           position: "absolute",
@@ -590,7 +376,7 @@ const EndCard: React.FC = () => {
           justifyContent: "center",
           flexDirection: "column",
           opacity: p,
-          transform: `translateY(${(1 - p) * 26}px)`,
+          transform: `translateY(${(1 - p) * 24}px)`,
         }}
       >
         <Mark size={76} />
@@ -602,7 +388,7 @@ const EndCard: React.FC = () => {
             color: BONE,
             textTransform: "uppercase",
             textAlign: "center",
-            marginTop: 26,
+            marginTop: 24,
           }}
         >
           Your screen,
@@ -611,20 +397,20 @@ const EndCard: React.FC = () => {
         </div>
         <div
           style={{
+            marginTop: 32,
             fontFamily: MONO,
-            fontSize: 17,
-            letterSpacing: "0.2em",
-            color: DIM,
+            fontSize: 18,
+            letterSpacing: "0.16em",
+            color: BONE,
             textAlign: "center",
-            marginTop: 38,
-            lineHeight: 2,
+            lineHeight: 1.9,
           }}
         >
-          <span style={{ color: BONE }}>SPECTRA HUD</span>
-          <br />
           KAQUERAMOS.GITHUB.IO/SPECTRA-HUD
           <br />
-          LINUX / X11 · APACHE 2.0 · v0.2.1
+          <span style={{ color: DIM, fontSize: 13 }}>
+            NO TELEMETRY · KEYRING · 61 TESTS · APACHE 2.0 · v0.2.1
+          </span>
         </div>
       </div>
     </AbsoluteFill>
@@ -634,42 +420,36 @@ const EndCard: React.FC = () => {
 export const Launch: React.FC = () => (
   <AbsoluteFill style={{ background: INK }}>
     <Audio src={staticFile("launch-audio.mp3")} volume={0.9} />
-    <Backdrop grid={0.1} />
-    <Sequence from={0} durationInFrames={90}>
-      <SceneFade duration={90}>
-        <Manifesto />
+    <Backdrop grid={0.09} />
+    <Sequence from={0} durationInFrames={60}>
+      <SceneFade duration={60}>
+        <Hook />
       </SceneFade>
     </Sequence>
-    <Sequence from={90} durationInFrames={180}>
-      <SceneFade duration={180}>
-        <TypeReveal />
-      </SceneFade>
-    </Sequence>
-    <Sequence from={270} durationInFrames={240}>
-      <SceneFade duration={240}>
-        <ProductDemo />
-      </SceneFade>
-    </Sequence>
-    <Sequence from={510} durationInFrames={180}>
-      <SceneFade duration={180}>
-        <Command />
-      </SceneFade>
-    </Sequence>
-    <Sequence from={690} durationInFrames={180}>
-      <SceneFade duration={180}>
-        <Trust />
-      </SceneFade>
-    </Sequence>
-    <Sequence from={870} durationInFrames={180}>
-      <SceneFade duration={180}>
-        <Proof />
-      </SceneFade>
-    </Sequence>
-    <Sequence from={1050} durationInFrames={150}>
+    <Sequence from={60} durationInFrames={150}>
       <SceneFade duration={150}>
+        <CodeCase />
+      </SceneFade>
+    </Sequence>
+    <Sequence from={210} durationInFrames={150}>
+      <SceneFade duration={150}>
+        <GameCase />
+      </SceneFade>
+    </Sequence>
+    <Sequence from={360} durationInFrames={150}>
+      <SceneFade duration={150}>
+        <OpsCase />
+      </SceneFade>
+    </Sequence>
+    <Sequence from={510} durationInFrames={120}>
+      <SceneFade duration={120}>
+        <Montage />
+      </SceneFade>
+    </Sequence>
+    <Sequence from={630} durationInFrames={90}>
+      <SceneFade duration={90}>
         <EndCard />
       </SceneFade>
     </Sequence>
   </AbsoluteFill>
 );
-
