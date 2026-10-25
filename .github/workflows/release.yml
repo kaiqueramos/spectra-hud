@@ -30,7 +30,7 @@ jobs:
           chmod +x packaging/build-deb.sh packaging/build-tarball.sh
           packaging/build-deb.sh "${GITHUB_REF_NAME#v}"
           packaging/build-tarball.sh "${GITHUB_REF_NAME#v}"
-          sha256sum dist/*.deb dist/*.tar.gz > dist/SHA256SUMS
+          (cd dist && sha256sum *.deb *.tar.gz > SHA256SUMS)
 
       - name: Release
         uses: softprops/action-gh-release@v2
