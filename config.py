@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 from datetime import datetime, timezone
@@ -12,9 +13,21 @@ from typing import Any
 import keyring
 from keyring.errors import KeyringError
 
+try:
+    import yaml
+except Exception:  # PyYAML é opcional em runtime; o JSON continua funcionando
+    yaml = None
+
 APP = "spectra-hud"
 CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME") or (Path.home() / ".config")) / APP
 CONFIG_FILE = CONFIG_DIR / "config.json"
+YAML_FILE = CONFIG_DIR / "config.yaml"
+LAST_YAML_ERROR = ""
+YAML_HEADER = """# Spectra HUD — configuration
+# Edit with the app stopped, or use Reload YAML in the command center.
+# The API key stays in the system keyring; SPECTRA_API_KEY overrides it.
+# consent: true records LGPD consent; false revokes it.
+"""
 STATE_DIR = (
     Path(os.environ.get("XDG_STATE_HOME") or (Path.home() / ".local" / "state")) / APP
 )
@@ -122,17 +135,96 @@ def infer_provider(base_url: str) -> str:
     return "custom"
 
 
+def _to_yaml(cfg: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "provider": cfg.get("provider", ""),
+        "base_url": cfg.get("base_url", ""),
+        "model": cfg.get("model", ""),
+        "language": cfg.get("language", "pt"),
+        "theme": cfg.get("theme", "spectra"),
+        "animations": bool(cfg.get("animations", True)),
+        "paused": bool(cfg.get("paused", False)),
+        "consent": bool(cfg.get("consent_at")),
+        "blocklist": list(cfg.get("blocklist") or []),
+        "hotkeys": {
+            "scan": cfg.get("hotkey_scan", ""),
+            "bar": cfg.get("hotkey_bar", ""),
+            "center": cfg.get("hotkey_center", ""),
+            "pause": cfg.get("hotkey_pause", ""),
+        },
+        "pricing": dict(cfg.get("pricing") or {}),
+    }
+
+
+def _from_yaml(data: dict[str, Any], current: dict[str, Any]) -> dict[str, Any]:
+    out: dict[str, Any] = {}
+    for key in ("provider", "base_url", "model", "language", "theme"):
+        if key in data and data[key] is not None:
+            out[key] = str(data[key])
+    for key in ("animations", "paused"):
+        if key in data:
+            out[key] = bool(data[key])
+    if "blocklist" in data:
+        value = data["blocklist"]
+        if isinstance(value, str):
+            out["blocklist"] = [line.strip() for line in value.splitlines() if line.strip()]
+        elif isinstance(value, list):
+            out["blocklist"] = [str(item) for item in value]
+    if "pricing" in data and isinstance(data["pricing"], dict):
+        out["pricing"] = data["pricing"]
+    hotkeys = data.get("hotkeys")
+    if isinstance(hotkeys, dict):
+        for name in ("scan", "bar", "center", "pause"):
+            if name in hotkeys and hotkeys[name] is not None:
+                out[f"hotkey_{name}"] = str(hotkeys[name])
+    for name in ("scan", "bar", "center", "pause"):
+        flat = f"hotkey_{name}"
+        if flat in data and data[flat] is not None:
+            out[flat] = str(data[flat])
+    if "consent" in data:
+        if data["consent"]:
+            out["consent_at"] = current.get("consent_at") or datetime.now(timezone.utc).isoformat()
+        else:
+            out["consent_at"] = None
+    return out
+
+
 def load() -> dict[str, Any]:
+    global LAST_YAML_ERROR
+    LAST_YAML_ERROR = ""
     cfg = json.loads(json.dumps(DEFAULTS))  # deep copy
-    if CONFIG_FILE.exists():
+    has_json = CONFIG_FILE.exists()
+    if has_json:
         try:
             data = json.loads(CONFIG_FILE.read_text())
             if isinstance(data, dict):
                 cfg.update(data)
         except Exception:
             pass
-    else:
+
+    has_yaml = YAML_FILE.exists()
+    if has_yaml:
+        if yaml is None:
+            LAST_YAML_ERROR = "PyYAML não instalado"
+        else:
+            try:
+                data = yaml.safe_load(YAML_FILE.read_text()) or {}
+                if not isinstance(data, dict):
+                    raise ValueError("a raiz do YAML precisa ser um mapa")
+                cfg.update(_from_yaml(data, cfg))
+            except Exception as exc:
+                LAST_YAML_ERROR = f"{type(exc).__name__}: {exc}"
+                logging.getLogger("spectra.config").warning(
+                    "YAML inválido em %s: %s", YAML_FILE, exc
+                )
+
+    if not has_json and not has_yaml:
         cfg = _migrate_env(cfg)
+
+    if os.environ.get("SPECTRA_HOTKEY"):
+        cfg["hotkey_scan"] = os.environ["SPECTRA_HOTKEY"]
+    if os.environ.get("SPECTRA_HOTKEY_BAR"):
+        cfg["hotkey_bar"] = os.environ["SPECTRA_HOTKEY_BAR"]
     return cfg
 
 
@@ -155,14 +247,33 @@ def _migrate_env(cfg: dict[str, Any]) -> dict[str, Any]:
 
 
 def save(cfg: dict[str, Any]) -> None:
+    global LAST_YAML_ERROR
     try:
         CONFIG_DIR.mkdir(parents=True, exist_ok=True, mode=0o700)
+    except Exception:
+        return
+    try:
         tmp = CONFIG_FILE.with_suffix(".tmp")
         tmp.write_text(json.dumps(cfg, ensure_ascii=False, indent=2))
         os.chmod(tmp, 0o600)
         tmp.replace(CONFIG_FILE)
     except Exception:
         pass
+
+    if yaml is None:
+        return
+    try:
+        tmp = YAML_FILE.with_name(YAML_FILE.name + ".tmp")
+        text = YAML_HEADER + yaml.safe_dump(
+            _to_yaml(cfg), sort_keys=False, allow_unicode=True, default_flow_style=False
+        )
+        tmp.write_text(text)
+        os.chmod(tmp, 0o600)
+        tmp.replace(YAML_FILE)
+        LAST_YAML_ERROR = ""
+    except Exception as exc:
+        LAST_YAML_ERROR = f"{type(exc).__name__}: {exc}"
+        logging.getLogger("spectra.config").warning("falha ao salvar YAML: %s", exc)
 
 
 def _store_key(key: str, cfg: dict[str, Any]) -> None:
@@ -213,7 +324,9 @@ def is_blocked(title: str, cfg: dict[str, Any] | None = None) -> bool:
     if not title:
         return False
     lowered = title.lower()
-    patterns = (cfg or load()).get("blocklist") or DEFAULT_BLOCKLIST
+    patterns = (cfg or load()).get("blocklist")
+    if patterns is None:
+        patterns = DEFAULT_BLOCKLIST
     return any(str(p).lower() in lowered for p in patterns if str(p).strip())
 
 

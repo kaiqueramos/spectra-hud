@@ -1,5 +1,5 @@
-import keyring
 import pytest
+import yaml
 
 import config
 
@@ -9,11 +9,13 @@ def cfg_env(monkeypatch, tmp_path):
     store: dict[str, str] = {}
     monkeypatch.setattr(config, "CONFIG_DIR", tmp_path / "cfg")
     monkeypatch.setattr(config, "CONFIG_FILE", tmp_path / "cfg" / "config.json")
+    monkeypatch.setattr(config, "YAML_FILE", tmp_path / "cfg" / "config.yaml")
     monkeypatch.setattr(config, "STATE_DIR", tmp_path / "state")
     monkeypatch.setattr(config, "LOG_FILE", tmp_path / "state" / "spectra.log")
     monkeypatch.setattr(config, "_env_file", lambda: {})
     monkeypatch.setattr(config.keyring, "set_password", lambda _s, u, p: store.__setitem__(u, p))
     monkeypatch.setattr(config.keyring, "get_password", lambda _s, u: store.get(u))
+    config.LAST_YAML_ERROR = ""
     return store
 
 
@@ -49,6 +51,8 @@ def test_blocklist(cfg_env):
     assert config.is_blocked("Firefox — Notícias", cfg) is False
     cfg["blocklist"] = ["meu-banco"]
     assert config.is_blocked("Meu-Banco Online", cfg) is True
+    cfg["blocklist"] = []
+    assert config.is_blocked("1Password — Vault", cfg) is False
 
 
 def test_cost_and_pricing(cfg_env):
@@ -81,3 +85,38 @@ def test_runtime_env_override(cfg_env, monkeypatch):
 def test_mask_key():
     assert config.mask_key("") == "(não configurada)"
     assert config.mask_key("sk-1234567890") == "sk-1…7890"
+
+
+def test_yaml_roundtrip_and_override(cfg_env):
+    cfg = config.load()
+    cfg["theme"] = "paper"
+    cfg["language"] = "en"
+    cfg["hotkey_scan"] = "<ctrl>+x"
+    config.save(cfg)
+
+    data = yaml.safe_load(config.YAML_FILE.read_text())
+    assert data["theme"] == "paper"
+    assert data["hotkeys"]["scan"] == "<ctrl>+x"
+
+    data["theme"] = "ice"
+    data["language"] = "es"
+    data["paused"] = True
+    data["consent"] = True
+    config.YAML_FILE.write_text(yaml.safe_dump(data, sort_keys=False, allow_unicode=True))
+
+    loaded = config.load()
+    assert loaded["theme"] == "ice"
+    assert loaded["language"] == "es"
+    assert loaded["paused"] is True
+    assert config.has_consent(loaded)
+
+
+def test_invalid_yaml_keeps_json(cfg_env):
+    cfg = config.load()
+    cfg["theme"] = "paper"
+    config.save(cfg)
+    config.YAML_FILE.write_text("theme: [broken")
+
+    loaded = config.load()
+    assert loaded["theme"] == "paper"
+    assert config.LAST_YAML_ERROR

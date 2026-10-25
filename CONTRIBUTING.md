@@ -14,7 +14,7 @@ pip install -r requirements-dev.txt
 
 ## Before opening a PR
 
-- `pytest -q` must pass (59 tests today).
+- `pytest -q` must pass (61 tests today).
 - Keep the change scoped; one concern per PR.
 - Match the existing style (no formatter is enforced yet).
 - Never commit `.env`, keys, screenshots or `.session_cache.json`.

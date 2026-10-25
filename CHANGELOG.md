@@ -9,8 +9,9 @@ Command center polish.
 - Telemetry panel (latency, tokens, cost) and system panel (provider, keyring, consent, privacy, cache).
 - Microanimations: scanline, pulsing LED, switch transitions; toggle in the interface section.
 - Interface languages: Portuguese (BR), English and Spanish; the model answers in the selected language.
+- Editable YAML configuration (`config.yaml`) for every setting, with YAML > JSON precedence, Reload YAML / `Ctrl+R`, and invalid-YAML protection.
 - Immediate private-mode toggle and language/theme persistence.
-- 59 unit tests.
+- 61 unit tests.
 
 ## 0.1.0 — 2026-10-24
 

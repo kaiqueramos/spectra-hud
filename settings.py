@@ -74,7 +74,10 @@ class CommandCenter:
         theme.set_current(self.theme_key)
         self._test_queue: queue.Queue = queue.Queue()
         self._testing = False
-        self._block_cache = "\n".join(self.cfg.get("blocklist") or config.DEFAULT_BLOCKLIST)
+        blocklist = self.cfg.get("blocklist")
+        if blocklist is None:
+            blocklist = config.DEFAULT_BLOCKLIST
+        self._block_cache = "\n".join(blocklist)
         self._drag: tuple[int, int, int, int] | None = None
         self._pulse_phase = 0.0
         self._scan_y = 0.0
@@ -123,6 +126,7 @@ class CommandCenter:
         self.win.bind("<Control-s>", lambda _e: self.save())
         self.win.bind("<F5>", lambda _e: self.test_vision())
         self.win.bind("<Control-t>", lambda _e: self._cycle_theme())
+        self.win.bind("<Control-r>", lambda _e: self.reload_yaml())
         self.win.bind("<Button-1>", self._force_x_focus, add="+")
 
         mon = self._target_monitor()
@@ -139,6 +143,10 @@ class CommandCenter:
         self.body.place(x=26, y=18, relwidth=1, relheight=1, width=-52, height=-36)
 
         self._render()
+        if config.LAST_YAML_ERROR:
+            self.status_var.set(
+                tr("msg.yaml_error", error=self._yaml_error_text())
+            )
         self.win.after(80, self._force_x_focus)
         self.win.after(100, self._poll_test)
         self.win.after(700, self._refresh_meta)
@@ -438,6 +446,24 @@ class CommandCenter:
             tr("btn.logs"),
             self.open_logs,
             t,
+            height=32,
+            font=MONO_B,
+        ).pack(side="right", padx=(0, 8))
+        widgets.PillButton(
+            actions,
+            tr("btn.reload"),
+            self.reload_yaml,
+            t,
+            width=112,
+            height=32,
+            font=MONO_B,
+        ).pack(side="right", padx=(0, 8))
+        widgets.PillButton(
+            actions,
+            tr("btn.yaml"),
+            self.open_yaml,
+            t,
+            width=64,
             height=32,
             font=MONO_B,
         ).pack(side="right", padx=(0, 8))
@@ -1106,6 +1132,65 @@ class CommandCenter:
                 self.win.after(150, self._poll_test)
         except Exception:
             pass
+
+    def _sync_vars(self, cfg: dict[str, Any]) -> None:
+        current = cfg.get("provider", "custom")
+        self.provider_var.set(
+            config.PRESETS.get(current, config.PRESETS["custom"])["label"]
+        )
+        self.base_var.set(cfg.get("base_url", ""))
+        self.model_var.set(cfg.get("model", ""))
+        self.key_var.set(config.get_api_key(cfg))
+        self.consent_var.set(config.has_consent(cfg))
+        self.pause_var.set(bool(cfg.get("paused", False)))
+        self.animations_var.set(bool(cfg.get("animations", True)))
+        self.hotkey_scan_var.set(cfg.get("hotkey_scan", ""))
+        self.hotkey_bar_var.set(cfg.get("hotkey_bar", ""))
+        self.hotkey_center_var.set(cfg.get("hotkey_center", ""))
+        self.hotkey_pause_var.set(cfg.get("hotkey_pause", ""))
+        self.show_key_var.set(False)
+        price = (cfg.get("pricing") or {}).get(cfg.get("model", ""), {})
+        self.price_in_var.set(str(price.get("in", "")) if price else "")
+        self.price_out_var.set(str(price.get("out", "")) if price else "")
+        blocklist = cfg.get("blocklist")
+        if blocklist is None:
+            blocklist = config.DEFAULT_BLOCKLIST
+        self._block_cache = "\n".join(blocklist)
+        self.state_var.set(
+            tr("common.paused") if self.pause_var.get() else tr("common.ready")
+        )
+
+    def _yaml_error_text(self) -> str:
+        return " ".join(config.LAST_YAML_ERROR.split())[:100]
+
+    def open_yaml(self):
+        try:
+            import subprocess
+
+            if not config.YAML_FILE.exists():
+                config.save(self.cfg)
+            subprocess.Popen(["xdg-open", str(config.YAML_FILE)])
+        except Exception as exc:  # noqa: BLE001
+            self.status_var.set(tr("msg.yaml_open_error", error=exc))
+
+    def reload_yaml(self):
+        cfg = config.load()
+        if config.LAST_YAML_ERROR:
+            self.status_var.set(
+                tr("msg.yaml_error", error=self._yaml_error_text())
+            )
+            return
+        self.cfg = cfg
+        self.language = i18n.set_language(cfg.get("language", "pt"))
+        self.theme_key = cfg.get("theme", "spectra")
+        if self.theme_key not in theme.THEMES:
+            self.theme_key = "spectra"
+        theme.set_current(self.theme_key)
+        self._sync_vars(cfg)
+        self.on_saved(cfg)
+        self._render()
+        self._draw_grid()
+        self.status_var.set(tr("msg.yaml_reloaded"))
 
     def open_logs(self):
         try:

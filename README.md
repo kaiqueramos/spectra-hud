@@ -43,6 +43,7 @@ No server, no telemetry. The screenshot goes only to the endpoint **you** config
 - **3 interface languages** (PT-BR, EN, ES); the model answers in the selected language. See [docs/I18N.md](docs/I18N.md).
 - **Frameless Spectra titlebar** with drag, hide and close; custom switches, pill buttons and live theme cards.
 - **Telemetry and system panels**: latency, tokens, cost, provider, keyring, consent, privacy and cache.
+- **YAML config** (`~/.config/spectra-hud/config.yaml`) for every setting; reload with `Ctrl+R`. See [docs/CONFIG.md](docs/CONFIG.md).
 - **Microanimations** (scanline, pulsing LED, switches) with an on/off toggle.
 - **System keyring** for the API key (fallback to a 600 config file).
 - **Tray icon** (AppIndicator) with scan, pause and quit.
@@ -55,7 +56,7 @@ No server, no telemetry. The screenshot goes only to the endpoint **you** config
 - Multi-monitor aware (X11), with a safe side-column fallback when the model’s box is bad.
 - Bring your own key: any OpenAI-compatible vision model.
 - Local models via Ollama.
-- 59 unit tests.
+- 61 unit tests.
 
 ## Requirements
 
@@ -103,20 +104,43 @@ python3 main.py
 | Pricing | Optional `$ / 1M` input/output for cost display |
 | Language | PT-BR, English or Spanish (UI and model response) |
 | Animations | Scanline, LED pulse and switch transitions |
+| YAML | Open/reload `config.yaml`; all keys are documented in [docs/CONFIG.md](docs/CONFIG.md) |
 
 The telemetry panel shows the last scan latency, tokens and cost; the status line shows the last action and model. Cost appears when pricing is set.
 
 ## Configuration
 
-Settings live in `~/.config/spectra-hud/config.json` (mode 600), and the key lives in the system keyring. Environment variables override both:
+Settings live in `~/.config/spectra-hud/config.yaml` (mode 600, editable). `config.json` is written alongside as a legacy fallback, and **YAML wins** when both exist. The key lives in the system keyring. Environment variables override the files:
+
+```yaml
+# ~/.config/spectra-hud/config.yaml
+provider: commandcode
+base_url: https://api.commandcode.ai/provider/v1
+model: deepseek/deepseek-v4.1-flash
+language: pt
+theme: spectra
+animations: true
+paused: false
+consent: true
+blocklist: [1password, bitwarden, banco]
+hotkeys:
+  scan: "<ctrl>+<alt>+<space>"
+  bar: "<ctrl>+<shift>+<space>"
+  center: "<ctrl>+<alt>+c"
+  pause: "<ctrl>+<alt>+p"
+pricing:
+  deepseek/deepseek-v4.1-flash: {in: 0.0, out: 0.0}
+```
+
+Use **YAML** to open the file and **RECARREGAR** / `Ctrl+R` to apply edits. New hotkeys require an app restart. See [docs/CONFIG.md](docs/CONFIG.md) for every key and the precedence rules.
 
 | Variable | Meaning |
 |---|---|
 | `SPECTRA_API_KEY` | Provider key |
 | `SPECTRA_BASE_URL` | OpenAI-compatible base URL |
 | `SPECTRA_MODEL` | Vision model |
-| `SPECTRA_HOTKEY` | Scan hotkey (pynput syntax) |
-| `SPECTRA_HOTKEY_BAR` | Command bar hotkey |
+| `SPECTRA_HOTKEY` | Scan hotkey override (pynput syntax) |
+| `SPECTRA_HOTKEY_BAR` | Command bar hotkey override |
 
 Legacy names (`OPENCODE_GO_API_KEY`, `OPENCODE_GO_BASE_URL`, `MODEL_NAME`) and `.env` are read once for migration.
 

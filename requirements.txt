@@ -4,3 +4,4 @@ python-xlib==0.33
 Pillow==10.2.0
 keyring>=24,<26
 pystray>=0.19,<1
+PyYAML>=6,<7
