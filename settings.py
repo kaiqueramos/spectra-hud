@@ -341,7 +341,7 @@ class CommandCenter:
             font=MONO_S,
         )
         theme_lbl.pack(side="left", padx=(0, 14))
-        ver = tk.Label(right, text="v0.2.1", bg=t["bg"], fg=t["dim"], font=MONO_S)
+        ver = tk.Label(right, text=f"v{config.VERSION}", bg=t["bg"], fg=t["dim"], font=MONO_S)
         ver.pack(side="left", padx=(0, 8))
         for widget in (state, theme_lbl, ver):
             self._bind_drag(widget)

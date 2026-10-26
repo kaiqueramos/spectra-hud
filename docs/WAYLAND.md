@@ -73,8 +73,8 @@ the screen and saves `${XDG_RUNTIME_DIR}/spectra-wayland-test.png`.
 
 ## Status
 
-Wayland mode is **beta** and lives on `main`; the v0.2.1 release package is
-still the X11 release. Test it in a Wayland session before packaging a release.
+Wayland mode is **beta**. The `v0.3.0-beta` packages include it; the
+`v0.2.1` release remains the stable X11-only package.
 
 Validated on 2026-10-26 in a nested **Sway 1.9** session with `grim` and
 XWayland: capture, Results panel, card follow-up and `--scan` IPC. The portal

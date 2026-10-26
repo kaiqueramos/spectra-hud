@@ -31,7 +31,7 @@ To revoke access, delete or rotate the key at your provider and remove the `spec
 
 ## Sensitive screens
 
-v0.2 has **private mode** and a window-title blocklist, but **no pixel redaction**. Do not trigger a scan while a password manager, banking app, medical record or private conversation is on screen. Quit Spectra when screen sharing.
+v0.3 has **private mode** and a window-title blocklist, but **no pixel redaction**. Do not trigger a scan while a password manager, banking app, medical record or private conversation is on screen. Quit Spectra when screen sharing.
 
 ## Legal
 

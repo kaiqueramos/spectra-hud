@@ -2,9 +2,17 @@
 
 ## Unreleased
 
-- Wayland beta: portal/command capture, `spectra-hud --scan` IPC for desktop shortcuts, normal Results panel and follow-up dialog; no anchored overlay.
+## 0.3.0-beta — 2026-10-26
+
+First Wayland beta. X11 keeps the full anchored overlay.
+
+- Wayland capture via XDG Screenshot portal, with `grim`, `gnome-screenshot` and `spectacle` fallbacks.
+- `spectra-hud --scan/--ask/--show/--pause/--cancel` over a local Unix socket, for system shortcuts and desktop actions.
+- Normal Results panel with card follow-up; native WM titlebar on Wayland; tray Ask action.
+- No anchored overlay, no `pynput` global hotkeys and no reliable window-title blocklist on Wayland.
+- Validated on nested Sway 1.9 + `grim` (XWayland UI) and the portal client against `xdg-desktop-portal-wlr`; GNOME/KDE portal backends still need a real-session test.
 - 66 unit tests.
-- `.deb` and portable tarball release assets; the .deb installs a desktop entry and bootstraps a local venv.
+- `.deb` and portable tarball beta assets, with `SHA256SUMS`.
 - New 18 s hero loop and 24 s launch film built in Remotion, with real command center captures, kinetic type and an original soundtrack.
 - Site: launch film section with captions, new hero video/poster and updated social card.
 

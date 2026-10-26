@@ -6,7 +6,7 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
 [![Platform: Linux X11 + Wayland beta](https://img.shields.io/badge/platform-Linux%20%7C%20X11%20%2B%20Wayland-lightgrey.svg)](#requirements)
 
-**Status: v0.2.1 — experimental.** Linux. X11 has the full anchored overlay; a pragmatic **Wayland beta** lives on `main` ([docs/WAYLAND.md](docs/WAYLAND.md)). Bring your own API key. Interface in PT-BR, English or Spanish; model responses follow the UI language.
+**Status: v0.3.0-beta — Wayland beta.** Linux. X11 has the full anchored overlay; Wayland gets portal capture, a Results panel and `spectra-hud --scan` ([docs/WAYLAND.md](docs/WAYLAND.md)). The stable X11-only release is [v0.2.1](https://github.com/kaiqueramos/spectra-hud/releases/tag/v0.2.1). Bring your own API key. Interface in PT-BR, English or Spanish; model responses follow the UI language.
 
 [**Website**](https://kaiqueramos.github.io/spectra-hud/) · [**GitHub**](https://github.com/kaiqueramos/spectra-hud) · [**Privacy**](PRIVACY.md) · [**LGPD**](docs/LGPD.md)
 
@@ -72,24 +72,26 @@ No server, no telemetry. The screenshot goes only to the endpoint **you** config
 
 ### Ubuntu / Debian package
 
-Download the `.deb` from [Releases](https://github.com/kaiqueramos/spectra-hud/releases/latest) and install:
+Download the `.deb` from the [v0.3.0-beta release](https://github.com/kaiqueramos/spectra-hud/releases/tag/v0.3.0-beta) and install:
 
 ```bash
-sudo apt install ./spectra-hud_0.2.1_all.deb
+sudo apt install ./spectra-hud_0.3.0-beta_all.deb
 ```
 
 The package creates a Python venv at `/opt/spectra-hud/.venv` and downloads its Python dependencies during install, so it needs internet once. It registers the `spectra-hud` command and a desktop entry. Check `SHA256SUMS` in the release.
 
 ### Tarball
 
-Download `spectra-hud-0.2.1.tar.gz` from the same release, extract and run the user-local installer:
+Download `spectra-hud-0.3.0-beta.tar.gz` from the same release, extract and run the user-local installer:
 
 ```bash
-tar xzf spectra-hud-0.2.1.tar.gz
-cd spectra-hud-0.2.1
+tar xzf spectra-hud-0.3.0-beta.tar.gz
+cd spectra-hud-0.3.0-beta
 ./install.sh
 ./run.sh
 ```
+
+The stable X11-only package remains [v0.2.1](https://github.com/kaiqueramos/spectra-hud/releases/tag/v0.2.1).
 
 ### From source
 
@@ -217,6 +219,7 @@ Every scan sends a JPEG of the **active monitor** to the endpoint you configure.
 - [x] Local models via Ollama
 - [ ] Automatic fallback (free → paid)
 - [x] Wayland beta (portal/commands + tray/`--scan` + Results panel)
+- [ ] GNOME/KDE portal validation in a real session
 - [ ] Wayland anchored overlay (layer-shell / GNOME Shell extension)
 - [ ] Pixel redaction and region selection
 - [ ] AppImage packaging

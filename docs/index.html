@@ -48,7 +48,7 @@
       </nav>
 
       <div class="nav-right">
-        <span class="nav-ver">v0.2.1</span>
+        <span class="nav-ver">v0.3.0-beta</span>
         <a class="btn btn-sm" href="https://github.com/kaiqueramos/spectra-hud">GitHub <span aria-hidden="true">↗</span></a>
       </div>
     </div>
@@ -70,7 +70,7 @@
         <p class="lede">Press a hotkey. Spectra reads the screen and pins the next move to the exact element.</p>
 
         <div class="cta-row">
-          <a class="btn btn-primary" href="#install">Install v0.2.1</a>
+          <a class="btn btn-primary" href="#install">Install the beta</a>
           <a class="btn btn-ghost" href="#film">Watch the film <span aria-hidden="true">▶</span></a>
           <a class="btn btn-ghost" href="https://github.com/kaiqueramos/spectra-hud">Read the source</a>
         </div>
@@ -125,14 +125,14 @@
           <h2>Three screens.<br>One hotkey.</h2>
         </div>
         <div class="film-wrap">
-          <video class="film-video" controls preload="none" playsinline poster="./launch-24s-poster.jpg?v=24">
-            <source src="./launch-24s.mp4?v=24" type="video/mp4">
-            <track kind="captions" src="./launch-24s-en.vtt?v=24" srclang="en" label="English" default>
+          <video class="film-video" controls preload="none" playsinline poster="./launch-24s-poster.jpg?v=30">
+            <source src="./launch-24s.mp4?v=30" type="video/mp4">
+            <track kind="captions" src="./launch-24s-en.vtt?v=30" srclang="en" label="English" default>
           </video>
           <div class="film-meta mono">
             <span>LAUNCH FILM / 24S</span>
             <span>1080P / AUDIO</span>
-            <span>v0.2.1</span>
+            <span>v0.3.0-beta</span>
           </div>
         </div>
       </div>
@@ -360,7 +360,7 @@ SPECTRA_MODEL=<span class="c-s">your-vision-model</span></code></pre>
           <ul class="privacy-facts">
             <li><span class="mono">NO TELEMETRY</span> No analytics, no pings, no account.</li>
             <li><span class="mono">LOCAL CACHE</span> Text only, ten events, one hour.</li>
-            <li><span class="mono">NO REDACTION</span> v0.2 has private mode and a window-title blocklist, but no pixel redaction. Do not scan banking or passwords.</li>
+            <li><span class="mono">NO REDACTION</span> v0.3 has private mode and a window-title blocklist, but no pixel redaction. Do not scan banking or passwords.</li>
           </ul>
         </div>
       </div>
@@ -372,7 +372,7 @@ SPECTRA_MODEL=<span class="c-s">your-vision-model</span></code></pre>
         <div class="install-copy">
           <span class="section-index mono">05</span>
           <h2>Install. Add a key. Run.</h2>
-          <p>Use the <strong>.deb</strong>, the portable <strong>tarball</strong>, or clone. The package registers <code>spectra-hud</code> and a desktop entry. The .deb creates a local Python env and needs internet once.</p>
+          <p>Use the <strong>.deb</strong>, the portable <strong>tarball</strong>, or clone. The beta registers <code>spectra-hud</code> and a desktop entry. The .deb creates a local Python env and needs internet once. The stable X11-only package remains <a href="https://github.com/kaiqueramos/spectra-hud/releases/tag/v0.2.1">v0.2.1</a>.</p>
 
           <ul class="req-list">
             <li><span class="mono">PLATFORM</span> Linux X11, or Wayland beta</li>
@@ -382,7 +382,7 @@ SPECTRA_MODEL=<span class="c-s">your-vision-model</span></code></pre>
           </ul>
 
           <p class="warn"><strong>Wayland beta.</strong> Capture via portal, trigger with the tray or <code>spectra-hud --scan</code>, results in a normal panel. X11 is still required for anchored cards over other windows.</p>
-          <p class="pkg-note mono">DOWNLOAD THE .DEB OR TARBALL → <a href="https://github.com/kaiqueramos/spectra-hud/releases/latest">GITHUB RELEASES</a></p>
+          <p class="pkg-note mono">DOWNLOAD THE BETA (.DEB OR TARBALL) → <a href="https://github.com/kaiqueramos/spectra-hud/releases/tag/v0.3.0-beta">GITHUB RELEASE</a></p>
         </div>
 
         <div class="terminal">
@@ -397,7 +397,7 @@ git clone https://github.com/kaiqueramos/spectra-hud.git
 <span class="c-g">cd</span> spectra-hud && ./install.sh
 <span class="c-d"># 3. run — first run opens the command center</span>
 ./run.sh</code></pre>
-          <div class="terminal-foot mono"><span>APACHE 2.0</span><span>v0.2.1</span><span>LINUX / X11</span></div>
+          <div class="terminal-foot mono"><span>APACHE 2.0</span><span>v0.3.0-beta</span><span>LINUX / X11 + WAYLAND</span></div>
         </div>
       </div>
     </section>

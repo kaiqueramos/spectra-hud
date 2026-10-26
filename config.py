@@ -19,6 +19,7 @@ except Exception:  # PyYAML é opcional em runtime; o JSON continua funcionando
     yaml = None
 
 APP = "spectra-hud"
+VERSION = "0.3.0-beta"
 CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME") or (Path.home() / ".config")) / APP
 CONFIG_FILE = CONFIG_DIR / "config.json"
 YAML_FILE = CONFIG_DIR / "config.yaml"
