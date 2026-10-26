@@ -63,7 +63,7 @@ No server, no telemetry. The screenshot goes only to the endpoint **you** config
 
 - Linux with **X11** for the full overlay, or **Wayland beta** (GNOME/KDE/wlroots) for capture + Results panel. X11 is still required for anchored cards over other windows.
 - Python **3.10+** with Tkinter and venv (`sudo apt install python3-tk python3-venv`).
-- `xdotool` is optional (Xlib fallback is built in).
+- `xdotool` is optional on X11 (Xlib fallback is built in).
 - `keyring` and `pystray` are installed by `requirements.txt`; the tray needs `python3-gi`, `gir1.2-ayatanaappindicator3-0.1` and the GNOME AppIndicator extension.
 - An API key for an OpenAI-compatible vision endpoint (or a local Ollama model).
 - Optional: **Share Tech Mono**, **FiraCode Nerd Font** and **Ubuntu** for the intended typography; the app falls back to DejaVu.
