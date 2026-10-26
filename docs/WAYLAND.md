@@ -77,5 +77,6 @@ Wayland mode is **beta** and lives on `main`; the v0.2.1 release package is
 still the X11 release. Test it in a Wayland session before packaging a release.
 
 Validated on 2026-10-26 in a nested **Sway 1.9** session with `grim` and
-XWayland: capture, Results panel, card follow-up and `--scan` IPC. The GNOME
-and KDE **portal** paths still need a real session test.
+XWayland: capture, Results panel, card follow-up and `--scan` IPC. The portal
+client was also validated against `xdg-desktop-portal-wlr` in a private
+session; the GNOME and KDE portal **backends** still need a real session test.
