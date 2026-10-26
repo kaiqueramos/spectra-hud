@@ -9,12 +9,18 @@ command -v python3 >/dev/null || { echo "python3 not found"; exit 1; }
 python3 - <<'EOF' || { echo "Tkinter missing: sudo apt install python3-tk"; exit 1; }
 import tkinter  # noqa: F401
 EOF
-if ! command -v xdotool >/dev/null; then
-  echo "WARN: xdotool not found (sudo apt install xdotool)."
-  echo "      Multi-monitor capture will fall back to the primary monitor."
-fi
 if [ "${XDG_SESSION_TYPE:-}" = "wayland" ]; then
-  echo "WARN: Wayland session detected. Spectra v0.2 supports X11 only."
+  echo "Wayland session detected: running the beta (portal capture, Results panel)."
+  command -v grim >/dev/null || command -v gnome-screenshot >/dev/null || command -v spectacle >/dev/null || \
+    echo "WARN: install a capture fallback: gnome-screenshot, spectacle or grim."
+else
+  if ! command -v xdotool >/dev/null; then
+    echo "WARN: xdotool not found (sudo apt install xdotool)."
+    echo "      Multi-monitor capture will fall back to the primary monitor."
+  fi
+fi
+if ! python3 -c "import gi" >/dev/null 2>&1; then
+  echo "WARN: python3-gi not found; the tray needs it (sudo apt install python3-gi gir1.2-ayatanaappindicator3-0.1)."
 fi
 
 echo "==> Checking python3-venv"
@@ -54,6 +60,19 @@ Path=$ROOT
 Icon=utilities-terminal
 Terminal=true
 Categories=Utility;
+Actions=Scan;Ask;Open;
+
+[Desktop Action Scan]
+Name=Scan screen
+Exec=$ROOT/run.sh --scan
+
+[Desktop Action Ask]
+Name=Ask about the screen
+Exec=$ROOT/run.sh --ask
+
+[Desktop Action Open]
+Name=Command center
+Exec=$ROOT/run.sh --show
 EOF
 
 echo
