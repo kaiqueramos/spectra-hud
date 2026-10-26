@@ -19,6 +19,7 @@ import i18n
 import theme
 import widgets
 from i18n import SHORT, tr
+from screen_capture import is_wayland
 
 # Defaults seguros; _apply_fonts() troca pelas melhores fontes instaladas
 # quando a janela Tk já existe.
@@ -112,7 +113,7 @@ class CommandCenter:
 
         self.win = tk.Toplevel(root)
         self.win.title(tr("app.title"))
-        self.win.overrideredirect(True)
+        self.win.overrideredirect(not is_wayland())
         self.win.attributes("-topmost", True)
         try:
             self.win.configure(
@@ -159,6 +160,13 @@ class CommandCenter:
 
     # ------------------------------------------------------------------ infra
     def _target_monitor(self) -> dict:
+        if is_wayland():
+            return {
+                "left": 0,
+                "top": 0,
+                "width": max(800, self.root.winfo_screenwidth()),
+                "height": max(600, self.root.winfo_screenheight()),
+            }
         try:
             with mss.mss() as sct:
                 monitors = sct.monitors[1:] or [sct.monitors[0]]

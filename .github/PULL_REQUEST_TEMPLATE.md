@@ -4,7 +4,7 @@
 
 ## How tested
 
-- [ ] `pytest -q` (61+ tests)
+- [ ] `pytest -q` (66+ tests)
 - [ ] `ruff check .`
 - [ ] Tested on X11 (distro/WM: )
 - [ ] No keys, screenshots or personal data in the diff

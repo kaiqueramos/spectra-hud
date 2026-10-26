@@ -16,7 +16,7 @@ from Xlib import display as xdisplay
 
 
 def is_wayland() -> bool:
-    """True quando a sessão é Wayland (não suportado na v0.1)."""
+    """True quando a sessão é Wayland."""
     return os.environ.get("XDG_SESSION_TYPE", "").lower() == "wayland" or bool(
         os.environ.get("WAYLAND_DISPLAY")
     )
@@ -50,6 +50,9 @@ def get_mouse_position() -> tuple[int, int] | None:
 
 def get_active_window_title() -> str:
     """Título da janela ativa (para o blocklist de telas sensíveis)."""
+    if is_wayland():
+        # Um cliente Wayland nativo não expõe o título da janela ativa.
+        return ""
     d = None
     try:
         d = xdisplay.Display()
@@ -76,6 +79,11 @@ def get_active_window_title() -> str:
 
 def capture_active_monitor() -> tuple[Image.Image, dict]:
     """Captura o monitor sob o cursor (ou o primário, se não houver mouse)."""
+    if is_wayland():
+        from wayland_capture import capture_wayland
+
+        return capture_wayland()
+
     position = get_mouse_position()
     mx, my = position if position else (None, None)
 

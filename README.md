@@ -4,9 +4,9 @@
 
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
-[![Platform: Linux X11](https://img.shields.io/badge/platform-Linux%20%7C%20X11-lightgrey.svg)](#requirements)
+[![Platform: Linux X11 + Wayland beta](https://img.shields.io/badge/platform-Linux%20%7C%20X11%20%2B%20Wayland-lightgrey.svg)](#requirements)
 
-**Status: v0.2.1 — experimental.** Linux + X11 only. Bring your own API key. Interface in PT-BR, English or Spanish; model responses follow the UI language.
+**Status: v0.2.1 — experimental.** Linux. X11 has the full anchored overlay; a pragmatic **Wayland beta** lives on `main` ([docs/WAYLAND.md](docs/WAYLAND.md)). Bring your own API key. Interface in PT-BR, English or Spanish; model responses follow the UI language.
 
 [**Website**](https://kaiqueramos.github.io/spectra-hud/) · [**GitHub**](https://github.com/kaiqueramos/spectra-hud) · [**Privacy**](PRIVACY.md) · [**LGPD**](docs/LGPD.md)
 
@@ -41,6 +41,7 @@ No server, no telemetry. The screenshot goes only to the endpoint **you** config
 - **Vision test**: sends a red/blue image and confirms the model actually sees it.
 - **10 themes** (5 dark, 5 light) with live preview; `Ctrl+T` cycles. See [docs/THEMES.md](docs/THEMES.md).
 - **3 interface languages** (PT-BR, EN, ES); the model answers in the selected language. See [docs/I18N.md](docs/I18N.md).
+- **Wayland beta**: portal/command capture, tray and `spectra-hud --scan` via a system shortcut, normal Results panel. No anchored overlay. See [docs/WAYLAND.md](docs/WAYLAND.md).
 - **Frameless Spectra titlebar** with drag, hide and close; custom switches, pill buttons and live theme cards.
 - **Telemetry and system panels**: latency, tokens, cost, provider, keyring, consent, privacy and cache.
 - **YAML config** (`~/.config/spectra-hud/config.yaml`) for every setting; reload with `Ctrl+R`. See [docs/CONFIG.md](docs/CONFIG.md).
@@ -56,11 +57,11 @@ No server, no telemetry. The screenshot goes only to the endpoint **you** config
 - Multi-monitor aware (X11), with a safe side-column fallback when the model’s box is bad.
 - Bring your own key: any OpenAI-compatible vision model.
 - Local models via Ollama.
-- 61 unit tests.
+- 66 unit tests.
 
 ## Requirements
 
-- Linux with **X11** (Wayland is not supported in v0.2; the app fails with a clear message).
+- Linux with **X11** for the full overlay, or **Wayland beta** (GNOME/KDE/wlroots) for capture + Results panel. X11 is still required for anchored cards over other windows.
 - Python **3.10+** with Tkinter and venv (`sudo apt install python3-tk python3-venv`).
 - `xdotool` is optional (Xlib fallback is built in).
 - `keyring` and `pystray` are installed by `requirements.txt`; the tray needs `python3-gi`, `gir1.2-ayatanaappindicator3-0.1` and the GNOME AppIndicator extension.
@@ -198,7 +199,8 @@ Every scan sends a JPEG of the **active monitor** to the endpoint you configure.
 
 ## Known limitations
 
-- **X11 only.** Wayland capture and global shortcuts need a different implementation.
+- **X11 for anchored overlay.** Wayland beta captures the full screen and shows a Results panel; no cards over other windows, no reliable window-title blocklist, and scans are triggered by tray/system shortcut.
+- **Wayland capture** needs the Screenshot portal or `grim`/`gnome-screenshot`/`spectacle`; the portal may ask permission per scan.
 - **HiDPI scaling** may offset cards from their targets.
 - **No pixel redaction** yet: pause/blocklist are the current controls. Use a local model for sensitive work.
 - **Prompt injection:** text visible on screen is untrusted input to the model.
@@ -214,7 +216,8 @@ Every scan sends a JPEG of the **active monitor** to the endpoint you configure.
 - [x] Cancel, latency and token/cost readout
 - [x] Local models via Ollama
 - [ ] Automatic fallback (free → paid)
-- [ ] Wayland support (XDG Desktop Portal + `grim`)
+- [x] Wayland beta (portal/commands + tray/`--scan` + Results panel)
+- [ ] Wayland anchored overlay (layer-shell / GNOME Shell extension)
 - [ ] Pixel redaction and region selection
 - [ ] AppImage packaging
 - [x] Interface i18n (PT-BR / EN / ES) + model response language

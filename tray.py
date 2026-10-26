@@ -47,6 +47,7 @@ class SpectraTray:
                 default=True,
             ),
             pystray.MenuItem(i18n.tr("tray.scan"), lambda: self.dispatch(("SCAN",))),
+            pystray.MenuItem(i18n.tr("tray.ask"), lambda: self.dispatch(("ASK_SCREEN",))),
             pystray.MenuItem(
                 i18n.tr("tray.pause"), lambda: self.dispatch(("TOGGLE_PAUSE",))
             ),

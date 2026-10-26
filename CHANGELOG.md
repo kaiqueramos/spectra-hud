@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Wayland beta: portal/command capture, `spectra-hud --scan` IPC for desktop shortcuts, normal Results panel and follow-up dialog; no anchored overlay.
+- 66 unit tests.
 - `.deb` and portable tarball release assets; the .deb installs a desktop entry and bootstraps a local venv.
 - New 18 s hero loop and 24 s launch film built in Remotion, with real command center captures, kinetic type and an original soundtrack.
 - Site: launch film section with captions, new hero video/poster and updated social card.

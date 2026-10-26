@@ -59,7 +59,7 @@
     <section class="hero" id="top">
       <div class="hero-copy">
         <div class="data-strip" aria-label="Platform and license">
-          <span>Linux</span><span>X11</span><span>Apache 2.0</span><span>BYOK</span>
+          <span>Linux</span><span>X11</span><span>Wayland beta</span><span>Apache 2.0</span><span>BYOK</span>
         </div>
 
         <h1 class="hero-title">
@@ -75,7 +75,7 @@
           <a class="btn btn-ghost" href="https://github.com/kaiqueramos/spectra-hud">Read the source</a>
         </div>
 
-        <p class="hero-note">61 tests. No telemetry. Your key stays local.</p>
+        <p class="hero-note">66 tests. No telemetry. Your key stays local.</p>
       </div>
 
       <div class="hero-demo">
@@ -276,9 +276,9 @@ SPECTRA_MODEL=<span class="c-s">your-vision-model</span></code></pre>
           </article>
 
           <article class="cell cell-f">
-            <h3>61 tests.</h3>
+            <h3>66 tests.</h3>
             <p>Geometry, schema and parsing are covered. The overlay is tested by hand on X11.</p>
-            <div class="term-line mono" aria-hidden="true"><span class="c-g">$</span> pytest -q<br><span class="c-g">61 passed</span> in 0.55s</div>
+            <div class="term-line mono" aria-hidden="true"><span class="c-g">$</span> pytest -q<br><span class="c-g">66 passed</span> in 0.55s</div>
           </article>
         </div>
       </div>
@@ -375,13 +375,13 @@ SPECTRA_MODEL=<span class="c-s">your-vision-model</span></code></pre>
           <p>Use the <strong>.deb</strong>, the portable <strong>tarball</strong>, or clone. The package registers <code>spectra-hud</code> and a desktop entry. The .deb creates a local Python env and needs internet once.</p>
 
           <ul class="req-list">
-            <li><span class="mono">PLATFORM</span> Linux with X11</li>
+            <li><span class="mono">PLATFORM</span> Linux X11, or Wayland beta</li>
             <li><span class="mono">PYTHON</span> 3.10+ with Tkinter + venv</li>
             <li><span class="mono">SYSTEM</span> <code>xdotool</code></li>
             <li><span class="mono">KEY</span> any OpenAI-compatible vision endpoint</li>
           </ul>
 
-          <p class="warn"><strong>Wayland is not supported in v0.2.</strong> Capture and global hotkeys need X11.</p>
+          <p class="warn"><strong>Wayland beta.</strong> Capture via portal/commands, results in a normal panel, triggered by tray or `spectra-hud --scan`. X11 is still required for anchored cards over other windows.</p>
           <p class="pkg-note mono">DOWNLOAD THE .DEB OR TARBALL → <a href="https://github.com/kaiqueramos/spectra-hud/releases/latest">GITHUB RELEASES</a></p>
         </div>
 

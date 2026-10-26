@@ -35,8 +35,13 @@ scan hotkey also cancels.
 
 ## Wayland
 
-v0.2 supports X11 only. The app exits with a clear message. Use an X11 session
-or wait for the Wayland port.
+Wayland runs in **beta** mode: capture via the Screenshot portal or
+`grim`/`gnome-screenshot`/`spectacle`, results in a normal panel, and scans
+triggered by the tray or `spectra-hud --scan` bound to a system shortcut.
+There is no anchored overlay over other windows. See [WAYLAND.md](WAYLAND.md).
+
+If capture fails, install a backend (`gnome-screenshot`, `spectacle` or `grim`)
+and try again. The portal may ask for permission.
 
 ## Tray icon missing
 

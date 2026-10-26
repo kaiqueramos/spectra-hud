@@ -3,7 +3,20 @@ Type=Application
 Name=Spectra HUD
 Comment=Screen-aware AI HUD for Linux/X11
 Exec=spectra-hud
+Actions=Scan;Ask;Open;
 Icon=spectra-hud
 Terminal=true
 Categories=Utility;
 StartupNotify=true
+
+[Desktop Action Scan]
+Name=Scan screen
+Exec=spectra-hud --scan
+
+[Desktop Action Ask]
+Name=Ask about the screen
+Exec=spectra-hud --ask
+
+[Desktop Action Open]
+Name=Command center
+Exec=spectra-hud --show

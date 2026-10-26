@@ -409,7 +409,7 @@ const EndCard: React.FC = () => {
           KAQUERAMOS.GITHUB.IO/SPECTRA-HUD
           <br />
           <span style={{ color: DIM, fontSize: 13 }}>
-            NO TELEMETRY · KEYRING · 61 TESTS · APACHE 2.0 · v0.2.1
+            NO TELEMETRY · KEYRING · 66 TESTS · APACHE 2.0 · v0.2.1
           </span>
         </div>
       </div>

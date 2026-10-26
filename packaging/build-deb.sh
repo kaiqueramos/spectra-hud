@@ -19,9 +19,9 @@ mkdir -p "$DIST" "$APP" "$PKG/DEBIAN" "$PKG/usr/bin" \
 
 cd "$ROOT"
 APP_FILES=(
-    ai_client.py config.py demo.py fonts.py i18n.py main.py overlay.py
-    prompt_system.md requirements.txt screen_capture.py session_memory.py
-    settings.py theme.py tray.py widgets.py
+    ai_client.py config.py demo.py fonts.py i18n.py ipc.py main.py overlay.py
+    prompt_system.md requirements.txt results.py screen_capture.py
+    session_memory.py settings.py theme.py tray.py wayland_capture.py widgets.py
 )
 cp "${APP_FILES[@]}" "$APP/"
 cp LICENSE NOTICE README.md "$PKG/usr/share/doc/spectra-hud/"
