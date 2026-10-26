@@ -18,10 +18,12 @@ from urllib.parse import unquote, urlparse
 from PIL import Image
 
 LAST_ERROR = ""
+LAST_BACKEND = ""
 
 
 def _portal_screenshot(timeout: float = 20.0) -> Image.Image:
     """Pede um screenshot ao org.freedesktop.portal.Screenshot."""
+    global LAST_BACKEND
     try:
         from gi.repository import Gio, GLib
     except Exception as exc:  # pragma: no cover - depends on system GI
@@ -102,11 +104,13 @@ def _portal_screenshot(timeout: float = 20.0) -> Image.Image:
         raise RuntimeError("portal não retornou o arquivo")
     path = Path(unquote(urlparse(str(uri)).path))
     with Image.open(path) as img:
+        LAST_BACKEND = "portal"
         return img.convert("RGB").copy()
 
 
 def _command_capture() -> Image.Image:
     """Fallback por compositor, para quando o portal não está disponível."""
+    global LAST_BACKEND
     candidates = [
         ("grim", ["grim"]),
         ("gnome-screenshot", ["gnome-screenshot", "-f"]),
@@ -129,6 +133,7 @@ def _command_capture() -> Image.Image:
                 )
                 if out.exists() and out.stat().st_size > 0:
                     with Image.open(out) as img:
+                        LAST_BACKEND = name
                         return img.convert("RGB").copy()
             except Exception:
                 continue
@@ -150,19 +155,28 @@ def capture_wayland() -> tuple[Image.Image, dict]:
     if shutil.which("grim") and ("sway" in desktop or "hyprland" in desktop):
         try:
             img = _command_capture()
-            return img, {"left": 0, "top": 0, "width": img.width, "height": img.height}
+            return img, {
+                "left": 0, "top": 0, "width": img.width, "height": img.height,
+                "backend": LAST_BACKEND,
+            }
         except Exception as exc:
             errors.append(f"grim: {exc}")
 
     try:
         img = _portal_screenshot()
-        return img, {"left": 0, "top": 0, "width": img.width, "height": img.height}
+        return img, {
+            "left": 0, "top": 0, "width": img.width, "height": img.height,
+            "backend": LAST_BACKEND,
+        }
     except Exception as exc:
         errors.append(f"portal: {exc}")
 
     try:
         img = _command_capture()
-        return img, {"left": 0, "top": 0, "width": img.width, "height": img.height}
+        return img, {
+            "left": 0, "top": 0, "width": img.width, "height": img.height,
+            "backend": LAST_BACKEND,
+        }
     except Exception as exc:
         errors.append(f"comando: {exc}")
 

@@ -54,24 +54,23 @@ class WaylandResults:
         win = tk.Toplevel(self.root)
         self.win = win
         win.title(i18n.tr("wayland.results_title"))
+        try:
+            win.attributes("-type", "dialog")
+        except tk.TclError:
+            pass
         win.configure(bg=t["bg"])
         win.attributes("-topmost", True)
         win.protocol("WM_DELETE_WINDOW", self.close)
         win.bind("<Escape>", lambda _e: self.close())
-        width = 620
-        height = 150 + 126 * max(1, len(insights))
-        sw = max(800, self.root.winfo_screenwidth())
-        sh = max(600, self.root.winfo_screenheight())
-        win.geometry(f"{width}x{height}+{max(20, (sw - width) // 2)}+{max(40, (sh - height) // 2)}")
-        win.minsize(520, 220)
-
         head = tk.Frame(win, bg=t["bg"])
         head.pack(fill="x", padx=22, pady=(20, 0))
         tk.Label(head, text="SPECTRA", bg=t["bg"], fg=t["text"], font=COND).pack(side="left")
         tk.Label(head, text="/ " + i18n.tr("wayland.results_sub"), bg=t["bg"], fg=t["dim"], font=MONO_S).pack(
             side="left", padx=(8, 0), pady=(6, 0)
         )
-        tk.Label(head, text="WAYLAND / XDG PORTAL", bg=t["bg"], fg=t["accent"], font=MONO_S).pack(
+        backend = str((meta or {}).get("backend") or "").upper()
+        label = f"WAYLAND / {backend}" if backend else "WAYLAND"
+        tk.Label(head, text=label, bg=t["bg"], fg=t["accent"], font=MONO_S).pack(
             side="right", pady=(6, 0)
         )
 
@@ -107,6 +106,16 @@ class WaylandResults:
             font=MONO_S,
             anchor="w",
         ).pack(fill="x", padx=24, pady=(12, 18))
+
+        win.update_idletasks()
+        width = 620
+        height = max(300, win.winfo_reqheight())
+        sw = max(800, self.root.winfo_screenwidth())
+        sh = max(600, self.root.winfo_screenheight())
+        win.geometry(
+            f"{width}x{height}+{max(20, (sw - width) // 2)}+{max(40, (sh - height) // 2)}"
+        )
+        win.minsize(520, 220)
         win.lift()
         win.focus_force()
 
@@ -179,6 +188,10 @@ class WaylandAskDialog:
         t = _colors()
         self.win = tk.Toplevel(root)
         self.win.title(i18n.tr("wayland.ask_title"))
+        try:
+            self.win.attributes("-type", "dialog")
+        except tk.TclError:
+            pass
         self.win.configure(bg=t["bg"])
         self.win.attributes("-topmost", True)
         self.win.protocol("WM_DELETE_WINDOW", self.close)

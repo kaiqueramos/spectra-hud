@@ -471,6 +471,7 @@ def process_queue(root):
                 _, monitor, img, insights, meta = msg
                 if wayland:
                     wayland_image = img
+                    meta["backend"] = monitor.get("backend") if monitor else None
                     if wayland_ui is not None:
                         wayland_ui.show(insights, meta)
                 else:
