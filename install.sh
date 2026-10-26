@@ -26,7 +26,7 @@ if ! python3 -c "import ensurepip" >/dev/null 2>&1; then
 fi
 
 echo "==> Creating virtualenv"
-python3 -m venv .venv
+python3 -m venv --system-site-packages .venv
 # shellcheck disable=SC1091
 . .venv/bin/activate
 python -m pip install --upgrade pip >/dev/null

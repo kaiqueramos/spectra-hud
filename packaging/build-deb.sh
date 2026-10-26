@@ -36,7 +36,7 @@ Section: utils
 Priority: optional
 Architecture: all
 Maintainer: Kaique Rodrigues Ramos <57043366+kaiqueramos@users.noreply.github.com>
-Depends: python3 (>= 3.10), python3-venv, python3-tk, libx11-6
+Depends: python3 (>= 3.10), python3-venv, python3-tk, python3-gi, gir1.2-ayatanaappindicator3-0.1, libx11-6
 Recommends: xdotool, gnome-keyring, gir1.2-ayatanaappindicator3-0.1
 Homepage: https://github.com/kaiqueramos/spectra-hud
 Description: Screen-aware AI HUD for Linux/X11
@@ -49,9 +49,9 @@ cat > "$PKG/DEBIAN/postinst" <<'EOF'
 #!/bin/sh
 set -e
 APP=/opt/spectra-hud
-if [ ! -x "$APP/.venv/bin/python" ]; then
+if [ ! -x "$APP/.venv/bin/python" ] || ! "$APP/.venv/bin/python" -c "import gi" >/dev/null 2>&1; then
     echo "Spectra HUD: creating Python environment (needs internet)..."
-    python3 -m venv "$APP/.venv"
+    python3 -m venv --clear --system-site-packages "$APP/.venv"
 fi
 "$APP/.venv/bin/python" -m pip install --no-cache-dir --disable-pip-version-check \
     -r "$APP/requirements.txt"

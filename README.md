@@ -63,7 +63,7 @@ No server, no telemetry. The screenshot goes only to the endpoint **you** config
 - Linux with **X11** (Wayland is not supported in v0.2; the app fails with a clear message).
 - Python **3.10+** with Tkinter and venv (`sudo apt install python3-tk python3-venv`).
 - `xdotool` is optional (Xlib fallback is built in).
-- `keyring` and `pystray` are installed by `requirements.txt`; the tray needs the GNOME AppIndicator extension.
+- `keyring` and `pystray` are installed by `requirements.txt`; the tray needs `python3-gi`, `gir1.2-ayatanaappindicator3-0.1` and the GNOME AppIndicator extension.
 - An API key for an OpenAI-compatible vision endpoint (or a local Ollama model).
 - Optional: **Share Tech Mono**, **FiraCode Nerd Font** and **Ubuntu** for the intended typography; the app falls back to DejaVu.
 
