@@ -60,6 +60,17 @@ spectra-hud --quit
 - The portal may show a permission dialog per capture; `ScreenCast` with a
   persistent token is the next step for a smoother flow.
 
+## Smoke test
+
+Run inside a Wayland session:
+
+```bash
+./scripts/wayland-check.sh
+```
+
+It checks the session, portal, backends and tray dependencies, then captures
+the screen and saves `${XDG_RUNTIME_DIR}/spectra-wayland-test.png`.
+
 ## Status
 
 Wayland mode is **beta** and lives on `main`; the v0.2.1 release package is
